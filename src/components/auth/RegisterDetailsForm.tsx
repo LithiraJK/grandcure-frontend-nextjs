@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 
+import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
@@ -18,21 +19,30 @@ export function RegisterDetailsForm() {
   const [errors, setErrors] = useState<
     Partial<Record<keyof RegisterFormValues, string>>
   >({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const passwordVisibility = usePasswordVisibility();
   const confirmPasswordVisibility = usePasswordVisibility();
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors = validateRegister(formValues);
     setErrors(nextErrors);
+    setFormMessage(null);
 
     if (Object.keys(nextErrors).length > 0) {
+      setFormMessage("Please fix the highlighted fields and try again.");
       return;
     }
 
+    setIsSubmitting(true);
+
     // Placeholder for auth integration.
+    await new Promise((resolve) => setTimeout(resolve, 700));
     console.log("Register submit", formValues);
+    setFormMessage("Account created successfully. Taking you to onboarding...");
+    setIsSubmitting(false);
   };
 
   const updateField = <K extends keyof RegisterFormValues>(
@@ -41,6 +51,7 @@ export function RegisterDetailsForm() {
   ) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
+    setFormMessage(null);
   };
 
   return (
@@ -112,8 +123,15 @@ export function RegisterDetailsForm() {
         }
       />
 
-      <AuthPrimaryButton type="submit">
-        Create Account
+      {formMessage ? (
+        <AuthFormMessage
+          message={formMessage}
+          tone={Object.keys(errors).length > 0 ? "error" : "success"}
+        />
+      ) : null}
+
+      <AuthPrimaryButton type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
+        {isSubmitting ? "Creating Account..." : "Create Account"}
         <span aria-hidden="true">→</span>
       </AuthPrimaryButton>
     </form>

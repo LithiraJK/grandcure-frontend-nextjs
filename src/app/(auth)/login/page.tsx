@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
 import { AuthInputField } from "@/components/auth/AuthInputField";
+import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
@@ -16,25 +17,35 @@ export default function LoginPage() {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormValues, string>>>({});
   const [rememberDevice, setRememberDevice] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const passwordVisibility = usePasswordVisibility();
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors = validateLogin(formValues);
     setErrors(nextErrors);
+    setFormMessage(null);
 
     if (Object.keys(nextErrors).length > 0) {
+      setFormMessage("Please fix the highlighted fields and try again.");
       return;
     }
 
+    setIsSubmitting(true);
+
     // Placeholder for auth integration.
+    await new Promise((resolve) => setTimeout(resolve, 700));
     console.log("Login submit", { ...formValues, rememberDevice });
+    setFormMessage("Signed in successfully. Redirecting to your portal...");
+    setIsSubmitting(false);
   };
 
   const updateField = <K extends keyof LoginFormValues>(field: K, value: LoginFormValues[K]) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
+    setFormMessage(null);
   };
 
   return (
@@ -129,8 +140,15 @@ export default function LoginPage() {
           Remember this device
         </label>
 
-        <AuthPrimaryButton type="submit">
-          Sign In to Portal
+        {formMessage ? (
+          <AuthFormMessage
+            message={formMessage}
+            tone={Object.keys(errors).length > 0 ? "error" : "success"}
+          />
+        ) : null}
+
+        <AuthPrimaryButton type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
+          {isSubmitting ? "Signing In..." : "Sign In to Portal"}
           <span aria-hidden="true">→</span>
         </AuthPrimaryButton>
       </form>
