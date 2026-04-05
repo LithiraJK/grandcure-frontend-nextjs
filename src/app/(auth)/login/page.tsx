@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
+import { establishAuthSession } from "@/lib/authSession";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
 import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
 import { ROUTES } from "@/lib/routes";
@@ -15,6 +16,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formValues, setFormValues] = useState<LoginFormValues>({
     email: "",
     password: "",
@@ -24,6 +26,12 @@ export default function LoginPage() {
   const passwordVisibility = usePasswordVisibility();
   const login = useAuthStore((state) => state.login);
   const isLoading = useAuthStore((state) => state.isLoading);
+
+  useEffect(() => {
+    if (searchParams.get("registered") === "1") {
+      setFormMessage("Registration successful. Please sign in with your new account.");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,6 +47,7 @@ export default function LoginPage() {
 
     try {
       await login(formValues);
+      await establishAuthSession("member", false);
       setFormMessage("Signed in successfully. Redirecting to your dashboard...");
       router.push(ROUTES.dashboard);
       return;

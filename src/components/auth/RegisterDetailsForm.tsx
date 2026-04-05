@@ -9,9 +9,10 @@ import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
-import { establishAuthSession } from "@/lib/authSession";
 import { validateRegister, type RegisterFormValues } from "@/lib/authValidation";
 import { ROUTES } from "@/lib/routes";
+import type { ApiUserRole } from "@/services/auth.service";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export function RegisterDetailsForm() {
   const router = useRouter();
@@ -25,13 +26,16 @@ export function RegisterDetailsForm() {
   const [errors, setErrors] = useState<
     Partial<Record<keyof RegisterFormValues, string>>
   >({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const passwordVisibility = usePasswordVisibility();
   const confirmPasswordVisibility = usePasswordVisibility();
+  const register = useAuthStore((state) => state.register);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const authError = useAuthStore((state) => state.error);
 
   const selectedRole = searchParams.get("role") === "caregiver" ? "caregiver" : "patient";
   const selectedRoleLabel = selectedRole === "caregiver" ? "Caregiver" : "Patient";
+  const selectedApiRole: ApiUserRole = selectedRole === "caregiver" ? "CARE_GIVER" : "PATIENT";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -45,20 +49,22 @@ export function RegisterDetailsForm() {
       return;
     }
 
-    setIsSubmitting(true);
-
-    // Placeholder for auth integration.
-    await new Promise((resolve) => setTimeout(resolve, 700));
-
     try {
-      await establishAuthSession(selectedRole, true);
-      setFormMessage("Account created successfully. Taking you to onboarding...");
-      setIsSubmitting(false);
-      router.push(ROUTES.portal);
+      await register({
+        name: formValues.name,
+        email: formValues.email,
+        password: formValues.password,
+        role: selectedApiRole,
+      });
+
+      router.push(`${ROUTES.login}?registered=1`);
       return;
-    } catch {
-      setFormMessage("Could not create your session. Please try again.");
-      setIsSubmitting(false);
+    } catch (error) {
+      setFormMessage(
+        error instanceof Error
+          ? error.message
+          : authError ?? "Could not create your account. Please try again.",
+      );
     }
   };
 
@@ -153,8 +159,8 @@ export function RegisterDetailsForm() {
         />
       ) : null}
 
-      <AuthPrimaryButton type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
-        {isSubmitting ? "Creating Account..." : "Create Account"}
+      <AuthPrimaryButton type="submit" disabled={isLoading} aria-busy={isLoading}>
+        {isLoading ? "Creating Account..." : "Create Account"}
         <span aria-hidden="true">→</span>
       </AuthPrimaryButton>
     </form>

@@ -6,22 +6,22 @@ export function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 	const hasSession = Boolean(request.cookies.get(AUTH_SESSION_COOKIE)?.value);
 
-	const isPortalPath = pathname.startsWith("/portal");
+	const isDashboardPath = pathname.startsWith("/dashboard");
 	const isAuthPath = pathname === "/login" || pathname.startsWith("/register");
 
-	if (isPortalPath && !hasSession) {
+	if (isDashboardPath && !hasSession) {
 		const loginUrl = new URL("/login", request.url);
 		return NextResponse.redirect(loginUrl);
 	}
 
 	if (isAuthPath && hasSession) {
-		const portalUrl = new URL("/portal", request.url);
-		return NextResponse.redirect(portalUrl);
+		const dashboardUrl = new URL("/dashboard", request.url);
+		return NextResponse.redirect(dashboardUrl);
 	}
 
 	return NextResponse.next();
 }
 
 export const config = {
-	matcher: ["/portal/:path*", "/login", "/register/:path*"],
+	matcher: ["/dashboard/:path*", "/login", "/register/:path*"],
 };
