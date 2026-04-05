@@ -1,16 +1,55 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
+
 import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
+import { validateRegister, type RegisterFormValues } from "@/lib/authValidation";
 
 export function RegisterDetailsForm() {
+  const [formValues, setFormValues] = useState<RegisterFormValues>({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof RegisterFormValues, string>>
+  >({});
   const passwordVisibility = usePasswordVisibility();
   const confirmPasswordVisibility = usePasswordVisibility();
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextErrors = validateRegister(formValues);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    // Placeholder for auth integration.
+    console.log("Register submit", formValues);
+  };
+
+  const updateField = <K extends keyof RegisterFormValues>(
+    field: K,
+    value: RegisterFormValues[K],
+  ) => {
+    setFormValues((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
   return (
-    <form className="space-y-5" aria-label="Registration details form">
+    <form
+      className="space-y-5"
+      aria-label="Registration details form"
+      onSubmit={handleSubmit}
+      noValidate
+    >
       <AuthInputField
         id="name"
         name="name"
@@ -18,6 +57,9 @@ export function RegisterDetailsForm() {
         autoComplete="name"
         label="Full Name"
         placeholder="Jane Doe"
+        value={formValues.name}
+        onChange={(event) => updateField("name", event.target.value)}
+        error={errors.name}
       />
 
       <AuthInputField
@@ -27,6 +69,9 @@ export function RegisterDetailsForm() {
         autoComplete="email"
         label="Work Email"
         placeholder="name@grandcure.com"
+        value={formValues.email}
+        onChange={(event) => updateField("email", event.target.value)}
+        error={errors.email}
       />
 
       <AuthInputField
@@ -36,6 +81,9 @@ export function RegisterDetailsForm() {
         autoComplete="new-password"
         label="Password"
         placeholder="Create a secure password"
+        value={formValues.password}
+        onChange={(event) => updateField("password", event.target.value)}
+        error={errors.password}
         rightSlot={
           <PasswordToggleButton
             isVisible={passwordVisibility.isVisible}
@@ -52,6 +100,9 @@ export function RegisterDetailsForm() {
         autoComplete="new-password"
         label="Confirm Password"
         placeholder="Re-enter your password"
+        value={formValues.confirmPassword}
+        onChange={(event) => updateField("confirmPassword", event.target.value)}
+        error={errors.confirmPassword}
         rightSlot={
           <PasswordToggleButton
             isVisible={confirmPasswordVisibility.isVisible}

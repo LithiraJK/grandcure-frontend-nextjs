@@ -1,16 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
+import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
 
 export default function LoginPage() {
+  const [formValues, setFormValues] = useState<LoginFormValues>({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof LoginFormValues, string>>>({});
   const [rememberDevice, setRememberDevice] = useState(false);
   const passwordVisibility = usePasswordVisibility();
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextErrors = validateLogin(formValues);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    // Placeholder for auth integration.
+    console.log("Login submit", { ...formValues, rememberDevice });
+  };
+
+  const updateField = <K extends keyof LoginFormValues>(field: K, value: LoginFormValues[K]) => {
+    setFormValues((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -23,13 +48,17 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <form className="mt-8 space-y-5">
+      <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
         <AuthInputField
           id="email"
+          name="email"
           type="email"
           autoComplete="email"
           label="Work Email"
           placeholder="name@grandcure.com"
+          value={formValues.email}
+          onChange={(event) => updateField("email", event.target.value)}
+          error={errors.email}
           leftIcon={
             <svg
               aria-hidden="true"
@@ -50,10 +79,14 @@ export default function LoginPage() {
 
         <AuthInputField
           id="password"
+          name="password"
           type={passwordVisibility.inputType}
           autoComplete="current-password"
           label="Password"
           placeholder="••••••••"
+          value={formValues.password}
+          onChange={(event) => updateField("password", event.target.value)}
+          error={errors.password}
           labelRightSlot={
             <Link
               href="#"
