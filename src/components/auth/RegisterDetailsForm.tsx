@@ -9,6 +9,7 @@ import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
+import { establishAuthSession } from "@/lib/authSession";
 import { validateRegister, type RegisterFormValues } from "@/lib/authValidation";
 import { ROUTES } from "@/lib/routes";
 
@@ -48,9 +49,10 @@ export function RegisterDetailsForm() {
 
     // Placeholder for auth integration.
     await new Promise((resolve) => setTimeout(resolve, 700));
+    establishAuthSession(selectedRole, true);
     setFormMessage("Account created successfully. Taking you to onboarding...");
     setIsSubmitting(false);
-    router.push(`${ROUTES.portal}?role=${selectedRole}`);
+    router.push(ROUTES.portal);
   };
 
   const updateField = <K extends keyof RegisterFormValues>(

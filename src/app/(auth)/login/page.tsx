@@ -9,6 +9,7 @@ import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
+import { establishAuthSession } from "@/lib/authSession";
 import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
 import { ROUTES } from "@/lib/routes";
 
@@ -40,6 +41,7 @@ export default function LoginPage() {
 
     // Placeholder for auth integration.
     await new Promise((resolve) => setTimeout(resolve, 700));
+    establishAuthSession("member", rememberDevice);
     setFormMessage("Signed in successfully. Redirecting to your portal...");
     setIsSubmitting(false);
     router.push(ROUTES.portal);
