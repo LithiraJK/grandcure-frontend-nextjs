@@ -32,6 +32,16 @@ export default function LoginPage() {
   useEffect(() => {
     if (searchParams.get("registered") === "1") {
       setFormMessage("Registration successful. Please sign in with your new account.");
+      return;
+    }
+
+    if (searchParams.get("expired") === "1") {
+      setFormMessage("Your session expired. Please sign in again.");
+      return;
+    }
+
+    if (searchParams.get("session") === "missing") {
+      setFormMessage("Please sign in to continue.");
     }
   }, [searchParams]);
 
