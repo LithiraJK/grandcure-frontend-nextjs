@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { AuthInputField } from "@/components/auth/AuthInputField";
@@ -9,8 +10,10 @@ import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
 import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
+import { ROUTES } from "@/lib/routes";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [formValues, setFormValues] = useState<LoginFormValues>({
     email: "",
     password: "",
@@ -37,9 +40,9 @@ export default function LoginPage() {
 
     // Placeholder for auth integration.
     await new Promise((resolve) => setTimeout(resolve, 700));
-    console.log("Login submit", { ...formValues, rememberDevice });
     setFormMessage("Signed in successfully. Redirecting to your portal...");
     setIsSubmitting(false);
+    router.push(ROUTES.portal);
   };
 
   const updateField = <K extends keyof LoginFormValues>(field: K, value: LoginFormValues[K]) => {
