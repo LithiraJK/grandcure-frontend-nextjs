@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 type AuthLayoutProps = {
@@ -16,13 +17,17 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         </div>
 
         <div className="space-y-8">
-          <div className="rounded-3xl bg-white/10 p-6 shadow-soft backdrop-blur-sm xl:p-8">
-            <div className="flex aspect-4/3 items-center justify-center rounded-2xl border border-white/25 bg-linear-to-br from-cyan-300/30 to-teal-200/15 p-6">
-              <p className="max-w-xs text-center text-sm font-medium tracking-wide text-white/85">
-                Illustration placeholder
-              </p>
+            <div className="relative aspect-4/2 object-cover w-full overflow-hidden rounded-2xl border border-white/25 bg-linear-to-br from-cyan-300/30 to-teal-200/15">
+              <Image
+                src="/login-illustrator-1.jpg"
+                alt="GrandCure care illustration"
+                fill
+                priority
+                sizes="(min-width: 1280px) 32vw, (min-width: 1024px) 40vw, 100vw"
+                className="object-cover"
+              />
             </div>
-          </div>
+
 
           <div className="max-w-md space-y-4">
             <h1 className="text-4xl font-display font-extrabold leading-tight">

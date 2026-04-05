@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -163,6 +164,13 @@ export function RegisterDetailsForm() {
         {isLoading ? "Creating Account..." : "Create Account"}
         <span aria-hidden="true">→</span>
       </AuthPrimaryButton>
+
+      <p className="text-center text-sm text-secondary">
+        Already have an account?{" "}
+        <Link href={ROUTES.login} className="font-bold text-primary hover:text-blue-700">
+          Sign In
+        </Link>
+      </p>
     </form>
   );
 }

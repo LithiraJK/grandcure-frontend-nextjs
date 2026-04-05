@@ -186,7 +186,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-3">
           <button
             type="button"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-100 px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-200"
@@ -196,14 +196,14 @@ export default function LoginPage() {
             </span>
             Google SSO
           </button>
-          <button
-            type="button"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-100 px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-200"
-          >
-            <span aria-hidden="true">🏢</span>
-            Enterprise
-          </button>
         </div>
+
+        <p className="mt-5 text-center text-sm text-secondary">
+          Don&apos;t have an account?{" "}
+          <Link href={ROUTES.register} className="font-bold text-primary hover:text-blue-700">
+            Sign Up
+          </Link>
+        </p>
       </div>
     </div>
   );
