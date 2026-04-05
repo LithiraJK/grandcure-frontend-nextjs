@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import { AuthInputField } from "@/components/auth/AuthInputField";
@@ -10,6 +11,7 @@ import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
 import { validateRegister, type RegisterFormValues } from "@/lib/authValidation";
 
 export function RegisterDetailsForm() {
+  const searchParams = useSearchParams();
   const [formValues, setFormValues] = useState<RegisterFormValues>({
     name: "",
     email: "",
@@ -23,6 +25,9 @@ export function RegisterDetailsForm() {
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const passwordVisibility = usePasswordVisibility();
   const confirmPasswordVisibility = usePasswordVisibility();
+
+  const selectedRole = searchParams.get("role") === "caregiver" ? "caregiver" : "patient";
+  const selectedRoleLabel = selectedRole === "caregiver" ? "Caregiver" : "Patient";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,7 +45,7 @@ export function RegisterDetailsForm() {
 
     // Placeholder for auth integration.
     await new Promise((resolve) => setTimeout(resolve, 700));
-    console.log("Register submit", formValues);
+    console.log("Register submit", { ...formValues, role: selectedRole });
     setFormMessage("Account created successfully. Taking you to onboarding...");
     setIsSubmitting(false);
   };
@@ -61,6 +66,12 @@ export function RegisterDetailsForm() {
       onSubmit={handleSubmit}
       noValidate
     >
+      <p className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-primary">
+        Registering as {selectedRoleLabel}
+      </p>
+
+      <input type="hidden" name="role" value={selectedRole} />
+
       <AuthInputField
         id="name"
         name="name"

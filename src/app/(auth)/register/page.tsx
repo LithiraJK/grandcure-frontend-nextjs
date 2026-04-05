@@ -44,7 +44,7 @@ export default function RegisterRolePage() {
           </p>
 
           <Link
-            href="/register/details"
+            href="/register/details?role=patient"
             className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-primary transition group-hover:translate-x-0.5"
           >
             Get Started
@@ -76,7 +76,7 @@ export default function RegisterRolePage() {
           </p>
 
           <Link
-            href="/register/details"
+            href="/register/details?role=caregiver"
             className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-tertiary transition group-hover:translate-x-0.5"
           >
             Get Started
