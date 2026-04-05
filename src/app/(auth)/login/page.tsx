@@ -9,9 +9,9 @@ import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
-import { establishAuthSession } from "@/lib/authSession";
 import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
 import { ROUTES } from "@/lib/routes";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,10 +20,10 @@ export default function LoginPage() {
     password: "",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormValues, string>>>({});
-  const [rememberDevice, setRememberDevice] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const passwordVisibility = usePasswordVisibility();
+  const login = useAuthStore((state) => state.login);
+  const isLoading = useAuthStore((state) => state.isLoading);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -37,20 +37,15 @@ export default function LoginPage() {
       return;
     }
 
-    setIsSubmitting(true);
-
-    // Placeholder for auth integration.
-    await new Promise((resolve) => setTimeout(resolve, 700));
-
     try {
-      await establishAuthSession("member", rememberDevice);
-      setFormMessage("Signed in successfully. Redirecting to your portal...");
-      setIsSubmitting(false);
-      router.push(ROUTES.portal);
+      await login(formValues);
+      setFormMessage("Signed in successfully. Redirecting to your dashboard...");
+      router.push(ROUTES.dashboard);
       return;
-    } catch {
-      setFormMessage("Could not start your session. Please try again.");
-      setIsSubmitting(false);
+    } catch (error) {
+      setFormMessage(
+        error instanceof Error ? error.message : "Could not sign in. Please try again.",
+      );
     }
   };
 
@@ -143,12 +138,7 @@ export default function LoginPage() {
         />
 
         <label className="inline-flex items-center gap-2 pt-1 text-sm text-secondary">
-          <input
-            type="checkbox"
-            checked={rememberDevice}
-            onChange={(event) => setRememberDevice(event.target.checked)}
-            className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary"
-          />
+          <input type="checkbox" className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary" />
           Remember this device
         </label>
 
@@ -159,8 +149,8 @@ export default function LoginPage() {
           />
         ) : null}
 
-        <AuthPrimaryButton type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
-          {isSubmitting ? "Signing In..." : "Sign In to Portal"}
+        <AuthPrimaryButton type="submit" disabled={isLoading} aria-busy={isLoading}>
+          {isLoading ? "Signing In..." : "Sign In to Portal"}
           <span aria-hidden="true">→</span>
         </AuthPrimaryButton>
       </form>
