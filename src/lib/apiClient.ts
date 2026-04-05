@@ -21,11 +21,7 @@ type ApiErrorResponse = {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 function resolveBaseUrl() {
-  if (!API_BASE_URL) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL environment variable.");
-  }
-
-  return API_BASE_URL;
+  return API_BASE_URL ?? "/api/backend";
 }
 
 async function parseResponse<T>(response: Response): Promise<ApiSuccessResponse<T>> {
