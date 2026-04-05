@@ -3,6 +3,17 @@
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { useAuthStore } from "@/store/useAuthStore";
 
+function formatRoleLabel(role: string | undefined) {
+  if (!role) {
+    return "Unknown";
+  }
+
+  return role
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export function DashboardOverview() {
   const user = useAuthStore((state) => state.user);
 
@@ -26,7 +37,7 @@ export function DashboardOverview() {
           Email: <span className="font-medium text-zinc-900">{user?.email ?? "Unknown"}</span>
         </p>
         <p className="mt-1 text-sm text-secondary">
-          Role: <span className="font-medium text-zinc-900">{String(user?.role ?? "Unknown")}</span>
+          Role: <span className="font-medium text-zinc-900">{formatRoleLabel(user?.role)}</span>
         </p>
       </div>
     </section>

@@ -71,6 +71,11 @@ function decodeJwtPayload(token: string): JwtUserPayload | null {
   }
 }
 
+function isTokenExpired(payload: JwtUserPayload) {
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  return payload.exp <= nowInSeconds;
+}
+
 function getInitialAuthState() {
   const storedToken = getStoredToken();
 
@@ -84,7 +89,7 @@ function getInitialAuthState() {
 
   const decodedUser = decodeJwtPayload(storedToken);
 
-  if (!decodedUser) {
+  if (!decodedUser || isTokenExpired(decodedUser)) {
     clearStoredToken();
     return {
       token: null,
@@ -116,7 +121,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { access_token } = await loginRequest(payload);
       const decodedUser = decodeJwtPayload(access_token);
 
-      if (!decodedUser) {
+      if (!decodedUser || isTokenExpired(decodedUser)) {
         throw new Error("Received invalid access token.");
       }
 
