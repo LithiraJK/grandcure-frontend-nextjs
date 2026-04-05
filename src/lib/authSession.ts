@@ -1,25 +1,30 @@
+import { ROUTES } from "@/lib/routes";
+
 export const AUTH_SESSION_COOKIE = "gc_session";
 export const AUTH_ROLE_COOKIE = "gc_role";
 
-type AuthRole = "member" | "patient" | "caregiver";
+export type AuthRole = "member" | "patient" | "caregiver";
 
-export function establishAuthSession(role: AuthRole, rememberDevice = false) {
-  if (typeof document === "undefined") {
-    return;
+export async function establishAuthSession(role: AuthRole, rememberDevice = false) {
+  const response = await fetch(ROUTES.apiAuthSession, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ role, rememberDevice }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to establish auth session.");
   }
-
-  const maxAgePart = rememberDevice ? "; max-age=2592000" : "";
-  const common = "; path=/; samesite=lax";
-
-  document.cookie = `${AUTH_SESSION_COOKIE}=active${maxAgePart}${common}`;
-  document.cookie = `${AUTH_ROLE_COOKIE}=${role}${maxAgePart}${common}`;
 }
 
-export function clearAuthSession() {
-  if (typeof document === "undefined") {
-    return;
-  }
+export async function clearAuthSession() {
+  const response = await fetch(ROUTES.apiAuthSession, {
+    method: "DELETE",
+  });
 
-  document.cookie = `${AUTH_SESSION_COOKIE}=; max-age=0; path=/; samesite=lax`;
-  document.cookie = `${AUTH_ROLE_COOKIE}=; max-age=0; path=/; samesite=lax`;
+  if (!response.ok) {
+    throw new Error("Failed to clear auth session.");
+  }
 }

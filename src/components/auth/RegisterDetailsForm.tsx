@@ -49,10 +49,17 @@ export function RegisterDetailsForm() {
 
     // Placeholder for auth integration.
     await new Promise((resolve) => setTimeout(resolve, 700));
-    establishAuthSession(selectedRole, true);
-    setFormMessage("Account created successfully. Taking you to onboarding...");
-    setIsSubmitting(false);
-    router.push(ROUTES.portal);
+
+    try {
+      await establishAuthSession(selectedRole, true);
+      setFormMessage("Account created successfully. Taking you to onboarding...");
+      setIsSubmitting(false);
+      router.push(ROUTES.portal);
+      return;
+    } catch {
+      setFormMessage("Could not create your session. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   const updateField = <K extends keyof RegisterFormValues>(

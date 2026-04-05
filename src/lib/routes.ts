@@ -3,4 +3,5 @@ export const ROUTES = {
   register: "/register",
   registerDetails: "/register/details",
   portal: "/portal",
+  apiAuthSession: "/api/auth/session",
 } as const;

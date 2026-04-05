@@ -41,10 +41,17 @@ export default function LoginPage() {
 
     // Placeholder for auth integration.
     await new Promise((resolve) => setTimeout(resolve, 700));
-    establishAuthSession("member", rememberDevice);
-    setFormMessage("Signed in successfully. Redirecting to your portal...");
-    setIsSubmitting(false);
-    router.push(ROUTES.portal);
+
+    try {
+      await establishAuthSession("member", rememberDevice);
+      setFormMessage("Signed in successfully. Redirecting to your portal...");
+      setIsSubmitting(false);
+      router.push(ROUTES.portal);
+      return;
+    } catch {
+      setFormMessage("Could not start your session. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   const updateField = <K extends keyof LoginFormValues>(field: K, value: LoginFormValues[K]) => {
