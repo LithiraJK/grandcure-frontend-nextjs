@@ -9,9 +9,9 @@ import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
+import { mapSelectionToApiRole } from "@/lib/authRoles";
 import { validateRegister, type RegisterFormValues } from "@/lib/authValidation";
 import { ROUTES } from "@/lib/routes";
-import type { ApiUserRole } from "@/services/auth.service";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function RegisterDetailsForm() {
@@ -35,7 +35,7 @@ export function RegisterDetailsForm() {
 
   const selectedRole = searchParams.get("role") === "caregiver" ? "caregiver" : "patient";
   const selectedRoleLabel = selectedRole === "caregiver" ? "Caregiver" : "Patient";
-  const selectedApiRole: ApiUserRole = selectedRole === "caregiver" ? "CARE_GIVER" : "PATIENT";
+  const selectedApiRole = mapSelectionToApiRole(selectedRole);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -22,7 +22,7 @@ type AuthState = {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (payload: LoginPayload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<JwtUserPayload>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
 };
@@ -134,6 +134,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
         error: null,
       });
+
+      return decodedUser;
     } catch (error) {
       clearStoredToken();
       set({

@@ -8,6 +8,7 @@ import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
+import { mapJwtRoleToSessionRole } from "@/lib/authRoles";
 import { establishAuthSession } from "@/lib/authSession";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
 import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
@@ -22,6 +23,7 @@ export default function LoginPage() {
     password: "",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormValues, string>>>({});
+  const [rememberDevice, setRememberDevice] = useState(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const passwordVisibility = usePasswordVisibility();
   const login = useAuthStore((state) => state.login);
@@ -46,8 +48,13 @@ export default function LoginPage() {
     }
 
     try {
-      await login(formValues);
-      await establishAuthSession("member", false);
+      const authenticatedUser = await login(formValues);
+      await establishAuthSession(
+        mapJwtRoleToSessionRole(
+          typeof authenticatedUser.role === "string" ? authenticatedUser.role : undefined,
+        ),
+        rememberDevice,
+      );
       setFormMessage("Signed in successfully. Redirecting to your dashboard...");
       router.push(ROUTES.dashboard);
       return;
@@ -147,7 +154,12 @@ export default function LoginPage() {
         />
 
         <label className="inline-flex items-center gap-2 pt-1 text-sm text-secondary">
-          <input type="checkbox" className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary" />
+          <input
+            type="checkbox"
+            checked={rememberDevice}
+            onChange={(event) => setRememberDevice(event.target.checked)}
+            className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary"
+          />
           Remember this device
         </label>
 
