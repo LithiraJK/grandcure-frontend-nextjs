@@ -28,7 +28,7 @@ export default function LoginPage() {
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const passwordVisibility = usePasswordVisibility();
   const login = useAuthStore((state) => state.login);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const isLoading = useAuthStore((state) => state.isLoginLoading);
 
   useEffect(() => {
     if (searchParams.get("registered") === "1") {

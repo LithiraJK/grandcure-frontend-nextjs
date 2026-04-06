@@ -20,8 +20,10 @@ type AuthState = {
   user: JwtUserPayload | null;
   token: string | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  isLoginLoading: boolean;
+  isRegisterLoading: boolean;
+  loginError: string | null;
+  registerError: string | null;
   login: (payload: LoginPayload) => Promise<JwtUserPayload>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
@@ -111,11 +113,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: initial.user,
   token: initial.token,
   isAuthenticated: initial.isAuthenticated,
-  isLoading: false,
-  error: null,
+  isLoginLoading: false,
+  isRegisterLoading: false,
+  loginError: null,
+  registerError: null,
 
   login: async (payload) => {
-    set({ isLoading: true, error: null });
+    set({ isLoginLoading: true, loginError: null });
 
     try {
       const { access_token } = await loginRequest(payload);
@@ -131,8 +135,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         token: access_token,
         user: decodedUser,
         isAuthenticated: true,
-        isLoading: false,
-        error: null,
+        isLoginLoading: false,
+        loginError: null,
       });
 
       return decodedUser;
@@ -142,8 +146,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         token: null,
         user: null,
         isAuthenticated: false,
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Login failed.",
+        isLoginLoading: false,
+        loginError: error instanceof Error ? error.message : "Login failed.",
       });
 
       throw error;
@@ -151,15 +155,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   register: async (payload) => {
-    set({ isLoading: true, error: null });
+    set({ isRegisterLoading: true, registerError: null });
 
     try {
       await registerRequest(payload);
-      set({ isLoading: false, error: null });
+      set({ isRegisterLoading: false, registerError: null });
     } catch (error) {
       set({
-        isLoading: false,
-        error: error instanceof Error ? error.message : "Registration failed.",
+        isRegisterLoading: false,
+        registerError: error instanceof Error ? error.message : "Registration failed.",
       });
 
       throw error;
@@ -172,8 +176,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       token: null,
       user: null,
       isAuthenticated: false,
-      isLoading: false,
-      error: null,
+      isLoginLoading: false,
+      isRegisterLoading: false,
+      loginError: null,
+      registerError: null,
     });
   },
 }));

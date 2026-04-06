@@ -31,8 +31,8 @@ export function RegisterDetailsForm() {
   const passwordVisibility = usePasswordVisibility();
   const confirmPasswordVisibility = usePasswordVisibility();
   const register = useAuthStore((state) => state.register);
-  const isLoading = useAuthStore((state) => state.isLoading);
-  const authError = useAuthStore((state) => state.error);
+  const isLoading = useAuthStore((state) => state.isRegisterLoading);
+  const authError = useAuthStore((state) => state.registerError);
 
   const selectedRole = searchParams.get("role") === "caregiver" ? "caregiver" : "patient";
   const selectedRoleLabel = selectedRole === "caregiver" ? "Caregiver" : "Patient";
