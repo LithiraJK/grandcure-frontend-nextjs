@@ -7,6 +7,7 @@ type RouteContext = {
 };
 
 const BACKEND_API_BASE_URL = process.env.BACKEND_API_BASE_URL ?? "http://localhost:8080";
+const MAX_PROXY_BODY_SIZE_BYTES = 1024 * 1024;
 
 async function forwardRequest(request: NextRequest, context: RouteContext) {
   const { path } = await context.params;
@@ -19,6 +20,19 @@ async function forwardRequest(request: NextRequest, context: RouteContext) {
   headers.delete("origin");
 
   const method = request.method;
+  const isBodyMethod = method !== "GET" && method !== "HEAD";
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+
+  if (isBodyMethod && contentLength > MAX_PROXY_BODY_SIZE_BYTES) {
+    return NextResponse.json(
+      {
+        statusCode: 413,
+        message: "Payload too large.",
+      },
+      { status: 413 },
+    );
+  }
+
   const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
 
   try {
