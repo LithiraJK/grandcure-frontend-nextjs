@@ -3,7 +3,7 @@
 import { Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 
 import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
@@ -26,31 +26,35 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormValues, string>>>({});
   const [rememberDevice, setRememberDevice] = useState(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [dismissedSearchMessageKey, setDismissedSearchMessageKey] = useState<string | null>(null);
   const passwordVisibility = usePasswordVisibility();
   const login = useAuthStore((state) => state.login);
   const isLoading = useAuthStore((state) => state.isLoginLoading);
-
-  useEffect(() => {
+  const searchMessageKey = searchParams.toString();
+  const searchMessage = useMemo(() => {
     if (searchParams.get("registered") === "1") {
-      setFormMessage("Registration successful. Please sign in with your new account.");
-      return;
+      return "Registration successful. Please sign in with your new account.";
     }
 
     if (searchParams.get("expired") === "1") {
-      setFormMessage("Your session expired. Please sign in again.");
-      return;
+      return "Your session expired. Please sign in again.";
     }
 
     if (searchParams.get("session") === "missing") {
-      setFormMessage("Please sign in to continue.");
+      return "Please sign in to continue.";
     }
+
+    return null;
   }, [searchParams]);
+  const resolvedSearchMessage = dismissedSearchMessageKey === searchMessageKey ? null : searchMessage;
+  const activeMessage = formMessage ?? resolvedSearchMessage;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors = validateLogin(formValues);
     setErrors(nextErrors);
+    setDismissedSearchMessageKey(searchMessageKey);
     setFormMessage(null);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -79,6 +83,7 @@ export default function LoginPage() {
   const updateField = <K extends keyof LoginFormValues>(field: K, value: LoginFormValues[K]) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
+    setDismissedSearchMessageKey(searchMessageKey);
     setFormMessage(null);
   };
 
@@ -145,9 +150,9 @@ export default function LoginPage() {
           Remember this device
         </label>
 
-        {formMessage ? (
+        {activeMessage ? (
           <AuthFormMessage
-            message={formMessage}
+            message={activeMessage}
             tone={Object.keys(errors).length > 0 ? "error" : "success"}
           />
         ) : null}
