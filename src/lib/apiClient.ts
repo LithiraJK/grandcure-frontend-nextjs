@@ -5,6 +5,7 @@ type RequestOptions = {
   body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
+  timeoutMs?: number;
 };
 
 type ApiSuccessResponse<T> = {
@@ -19,6 +20,7 @@ type ApiErrorResponse = {
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
 
 function resolveBaseUrl() {
   return API_BASE_URL ?? "/api/backend";
@@ -47,16 +49,48 @@ async function parseResponse<T>(response: Response): Promise<ApiSuccessResponse<
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<ApiSuccessResponse<T>> {
   const baseUrl = resolveBaseUrl();
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    method: options.method ?? "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    signal: options.signal,
-    cache: "no-store",
-  });
+  const abortController = new AbortController();
+  const timeoutMs = options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => {
+    abortController.abort();
+  }, timeoutMs);
 
-  return parseResponse<T>(response);
+  const onExternalAbort = () => {
+    abortController.abort();
+  };
+
+  if (options.signal) {
+    if (options.signal.aborted) {
+      abortController.abort();
+    } else {
+      options.signal.addEventListener("abort", onExternalAbort, { once: true });
+    }
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method: options.method ?? "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers ?? {}),
+      },
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: abortController.signal,
+      cache: "no-store",
+    });
+
+    return parseResponse<T>(response);
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+
+    if (options.signal) {
+      options.signal.removeEventListener("abort", onExternalAbort);
+    }
+  }
 }
