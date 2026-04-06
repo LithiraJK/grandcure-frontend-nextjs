@@ -106,7 +106,7 @@ export default function DashboardPage() {
   return (
     <AuthSessionGuard>
       <main className="h-screen overflow-hidden bg-neutral">
-        <div className="mx-auto flex h-full w-full max-w-350">
+        <div className="flex h-full w-full">
           <aside className="flex h-full w-59 shrink-0 flex-col border-r border-zinc-200/80 bg-white px-5 py-6">
             <div className="space-y-1">
               <p className="font-display text-2xl font-extrabold tracking-tight text-primary">GrandCure</p>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                     key={item.label}
                     type="button"
                     className={[
-                      "flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition",
+                      "flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-semibold transition",
                       item.isActive
                         ? "bg-[#edf4fa] text-primary"
                         : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                   <button
                     key={item.label}
                     type="button"
-                    className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
+                    className="flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
                   >
                     <Icon className="h-4 w-4" />
                     <span>{item.label}</span>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
           </aside>
 
           <section className="min-w-0 flex-1 overflow-hidden p-4 sm:p-6">
-            <div className="h-full overflow-y-auto rounded-2xl border border-zinc-200/70 bg-neutral shadow-sm">
+            <div className="h-full overflow-y-auto rounded-3xl border border-zinc-200/70 bg-neutral shadow-sm">
               <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200/70 bg-white/95 px-4 py-4 backdrop-blur sm:px-6">
                 <label className="relative block w-full max-w-xl">
                   <Search
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                   <input
                     type="search"
                     placeholder="Find care services..."
-                    className="h-11 w-full rounded-2xl border border-transparent bg-zinc-100 pl-10 pr-4 text-sm text-zinc-800 outline-none transition placeholder:text-secondary focus:border-primary/30 focus:bg-white"
+                    className="h-11 w-full rounded-3xl border border-transparent bg-zinc-100 pl-10 pr-4 text-sm text-zinc-800 outline-none transition placeholder:text-secondary focus:border-primary/30 focus:bg-white"
                   />
                 </label>
 
@@ -198,7 +198,7 @@ export default function DashboardPage() {
 
               <div className="space-y-6 px-4 py-5 sm:px-6 sm:py-6">
                 <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
-                  <article className="rounded-2xl bg-[#005c97] p-6 text-white shadow-sm sm:p-7">
+                  <article className="rounded-3xl bg-[#005c97] p-6 text-white shadow-sm sm:p-7">
                     <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight">
                       Good morning,
                       <br />
@@ -221,7 +221,7 @@ export default function DashboardPage() {
                     </button>
                   </article>
 
-                  <article className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+                  <article className="rounded-3xl bg-white p-5 shadow-sm sm:p-6">
                     <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d6f4f7] text-[#0a7481]">
                       <Activity className="h-5 w-5" />
                     </span>
@@ -262,7 +262,7 @@ export default function DashboardPage() {
                       return (
                         <article
                           key={request.id}
-                          className="flex items-center gap-4 rounded-2xl bg-white px-4 py-4 shadow-sm sm:px-5"
+                          className="flex items-center gap-4 rounded-3xl bg-white px-4 py-4 shadow-sm sm:px-5"
                         >
                           <div
                             className={[
@@ -319,8 +319,8 @@ export default function DashboardPage() {
                 </section>
 
                 <section className="grid gap-4 pb-1 md:grid-cols-3">
-                  <article className="rounded-2xl bg-[#7bd3de] px-5 py-6 shadow-sm">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#5ebecb] text-[#0f5f6d]">
+                  <article className="rounded-3xl bg-[#7bd3de] px-5 py-6 shadow-sm">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#5ebecb] text-[#0f5f6d]">
                       <Pill className="h-5 w-5" />
                     </span>
 
@@ -335,8 +335,8 @@ export default function DashboardPage() {
                     </p>
                   </article>
 
-                  <article className="rounded-2xl bg-[#d8dce1] px-5 py-6 shadow-sm">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#c2c9d0] text-[#4d5a66]">
+                  <article className="rounded-3xl bg-[#d8dce1] px-5 py-6 shadow-sm">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#c2c9d0] text-[#4d5a66]">
                       <History className="h-5 w-5" />
                     </span>
 
@@ -347,8 +347,8 @@ export default function DashboardPage() {
                     <p className="mt-4 text-sm leading-relaxed text-[#4a5762]">Review 12 completed sessions</p>
                   </article>
 
-                  <article className="relative overflow-hidden rounded-2xl bg-[#f4d3d3] px-5 py-6 shadow-sm">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#efb7b8] text-[#a01921]">
+                  <article className="relative overflow-hidden rounded-3xl bg-[#f4d3d3] px-5 py-6 shadow-sm">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#efb7b8] text-[#a01921]">
                       <Asterisk className="h-5 w-5" />
                     </span>
 
