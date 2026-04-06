@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
@@ -103,22 +104,7 @@ export default function LoginPage() {
           value={formValues.email}
           onChange={(event) => updateField("email", event.target.value)}
           error={errors.email}
-          leftIcon={
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              className="h-4 w-4 text-secondary"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 6h16" />
-              <path d="M4 6v12h16V6" />
-              <path d="m4 7 8 6 8-6" />
-            </svg>
-          }
+          leftIcon={<Mail aria-hidden="true" className="h-4 w-4 text-secondary" strokeWidth={2} />}
         />
 
         <AuthInputField
@@ -139,21 +125,7 @@ export default function LoginPage() {
               Forgot password?
             </Link>
           }
-          leftIcon={
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              className="h-4 w-4 text-secondary"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="4" y="11" width="16" height="9" rx="2" />
-              <path d="M8 11V8a4 4 0 1 1 8 0v3" />
-            </svg>
-          }
+          leftIcon={<Lock aria-hidden="true" className="h-4 w-4 text-secondary" strokeWidth={2} />}
           rightSlot={
             <PasswordToggleButton
               isVisible={passwordVisibility.isVisible}
