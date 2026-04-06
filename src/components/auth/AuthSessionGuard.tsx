@@ -30,6 +30,8 @@ export function AuthSessionGuard({ children }: AuthSessionGuardProps) {
   const isRedirectingRef = useRef(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const enforce = async () => {
       if (isRedirectingRef.current) {
         return false;
@@ -66,12 +68,20 @@ export function AuthSessionGuard({ children }: AuthSessionGuardProps) {
       return true;
     };
 
-    void enforce().then((ok) => setIsReady(ok));
+    void enforce().then((ok) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setIsReady(ok);
+    });
+
     const intervalId = window.setInterval(() => {
       void enforce();
     }, CHECK_INTERVAL_MS);
 
     return () => {
+      isMounted = false;
       window.clearInterval(intervalId);
     };
   }, [token, user, logout, router]);
