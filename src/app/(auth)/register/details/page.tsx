@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { RegisterDetailsForm } from "@/components/auth/RegisterDetailsForm";
 
 export default function RegisterDetailsPage() {
@@ -20,7 +22,9 @@ export default function RegisterDetailsPage() {
         </p>
       </div>
 
-      <RegisterDetailsForm />
+      <Suspense fallback={<div className="h-80 animate-pulse rounded-3xl bg-zinc-100" />}>
+        <RegisterDetailsForm />
+      </Suspense>
     </div>
   );
 }

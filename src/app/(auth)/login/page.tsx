@@ -3,7 +3,7 @@
 import { Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
+import { Suspense, useMemo, useState, type FormEvent } from "react";
 
 import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
@@ -16,7 +16,7 @@ import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/store/useAuthStore";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formValues, setFormValues] = useState<LoginFormValues>({
@@ -193,5 +193,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto h-130 w-full max-w-md animate-pulse rounded-3xl bg-zinc-100" />}>
+      <LoginContent />
+    </Suspense>
   );
 }
