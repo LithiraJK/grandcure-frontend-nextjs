@@ -2,8 +2,12 @@ import {
   Activity,
   Bell,
   CalendarDays,
+  Check,
+  ChevronRight,
   CircleHelp,
   ClipboardList,
+  Clock3,
+  Hourglass,
   LayoutDashboard,
   Plus,
   Pill,
@@ -21,6 +25,19 @@ type SidebarLink = {
   isActive?: boolean;
 };
 
+type RequestStatus = "PENDING" | "ASSIGNED";
+
+type ActiveRequest = {
+  id: string;
+  title: string;
+  details: string;
+  metaLabel: string;
+  metaValue: string;
+  status: RequestStatus;
+  icon: ComponentType<{ className?: string }>;
+  caregiverName?: string;
+};
+
 const primaryLinks: SidebarLink[] = [
   { label: "Dashboard", icon: LayoutDashboard, isActive: true },
   { label: "Requests", icon: ClipboardList },
@@ -34,6 +51,28 @@ const footerLinks: SidebarLink[] = [
   { label: "Help", icon: CircleHelp },
 ];
 
+const activeRequests: ActiveRequest[] = [
+  {
+    id: "post-surgery-care",
+    title: "Post-Surgery Care",
+    details: "Scheduled for Oct 14 • 09:00 AM - 01:00 PM",
+    metaLabel: "EST. DURATION",
+    metaValue: "4 Hours",
+    status: "PENDING",
+    icon: Hourglass,
+  },
+  {
+    id: "morning-wellness-walk",
+    title: "Morning Wellness Walk",
+    details: "Caregiver: Sarah Mitchell • Tomorrow at 8:30 AM",
+    metaLabel: "RATE",
+    metaValue: "$28/hr",
+    status: "ASSIGNED",
+    icon: Clock3,
+    caregiverName: "Sarah Mitchell",
+  },
+];
+
 function GoalProgressBar({ value, label }: { value: number; label: string }) {
   return (
     <div className="space-y-2">
@@ -42,6 +81,22 @@ function GoalProgressBar({ value, label }: { value: number; label: string }) {
       </div>
       <p className="text-right text-xs font-semibold tracking-wide text-secondary">{label}</p>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: RequestStatus }) {
+  if (status === "ASSIGNED") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-tertiary/30 bg-tertiary/10 px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] text-tertiary">
+        ASSIGNED
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center rounded-full border border-zinc-300 bg-zinc-100 px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] text-zinc-500">
+      PENDING
+    </span>
   );
 }
 
@@ -182,6 +237,83 @@ export default function DashboardPage() {
                       <GoalProgressBar value={85} label="Goal Met" />
                     </div>
                   </article>
+                </section>
+
+                <section className="space-y-3">
+                  <div className="flex items-end justify-between gap-3">
+                    <h2 className="font-display text-4xl font-extrabold tracking-tight text-zinc-900">
+                      My Active Requests
+                    </h2>
+
+                    <button
+                      type="button"
+                      className="text-sm font-bold text-primary transition hover:text-blue-700"
+                    >
+                      View All History
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {activeRequests.map((request) => {
+                      const RequestIcon = request.icon;
+
+                      return (
+                        <article
+                          key={request.id}
+                          className="flex items-center gap-4 rounded-2xl bg-white px-4 py-4 shadow-sm sm:px-5"
+                        >
+                          <div
+                            className={[
+                              "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border",
+                              request.status === "ASSIGNED"
+                                ? "border-tertiary bg-[#ecf8ed] text-tertiary"
+                                : "border-zinc-200 bg-zinc-100 text-zinc-500",
+                            ].join(" ")}
+                          >
+                            {request.status === "ASSIGNED" ? (
+                              <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-tertiary bg-white text-xs font-bold text-zinc-700">
+                                SM
+                                <span className="absolute -bottom-0.5 -right-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-tertiary text-white">
+                                  <Check className="h-2.5 w-2.5" />
+                                </span>
+                              </span>
+                            ) : (
+                              <RequestIcon className="h-5 w-5" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="font-display text-2xl font-bold tracking-tight text-zinc-900">
+                                {request.title}
+                              </h3>
+                              <StatusBadge status={request.status} />
+                            </div>
+                            <p className="mt-0.5 text-sm text-secondary">{request.details}</p>
+                          </div>
+
+                          <div className="ml-auto flex items-center gap-4">
+                            <div className="text-right">
+                              <p className="text-[11px] font-bold tracking-[0.08em] text-secondary">
+                                {request.metaLabel}
+                              </p>
+                              <p className="font-display text-2xl font-extrabold tracking-tight text-zinc-900">
+                                {request.metaValue}
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              aria-label={`Open ${request.title} details`}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-secondary transition hover:bg-zinc-100 hover:text-zinc-800"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
                 </section>
               </div>
             </div>
