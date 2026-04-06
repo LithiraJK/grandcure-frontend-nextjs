@@ -1,5 +1,6 @@
 import {
   Activity,
+  Asterisk,
   Bell,
   CalendarDays,
   Check,
@@ -7,6 +8,7 @@ import {
   CircleHelp,
   ClipboardList,
   Clock3,
+  History,
   Hourglass,
   LayoutDashboard,
   Plus,
@@ -314,6 +316,61 @@ export default function DashboardPage() {
                       );
                     })}
                   </div>
+                </section>
+
+                <section className="grid gap-4 pb-1 md:grid-cols-3">
+                  <article className="rounded-2xl bg-[#7bd3de] px-5 py-6 shadow-sm">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#5ebecb] text-[#0f5f6d]">
+                      <Pill className="h-5 w-5" />
+                    </span>
+
+                    <h3 className="mt-7 font-display text-4xl font-extrabold leading-tight tracking-tight text-[#0a5161]">
+                      Medication
+                      <br />
+                      Tracker
+                    </h3>
+
+                    <p className="mt-4 text-sm leading-relaxed text-[#1e5e67]">
+                      Next dose: 12:30 PM (Blood Pressure)
+                    </p>
+                  </article>
+
+                  <article className="rounded-2xl bg-[#d8dce1] px-5 py-6 shadow-sm">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#c2c9d0] text-[#4d5a66]">
+                      <History className="h-5 w-5" />
+                    </span>
+
+                    <h3 className="mt-7 font-display text-4xl font-extrabold leading-tight tracking-tight text-[#2f3f4b]">
+                      Past Visits
+                    </h3>
+
+                    <p className="mt-4 text-sm leading-relaxed text-[#4a5762]">Review 12 completed sessions</p>
+                  </article>
+
+                  <article className="relative overflow-hidden rounded-2xl bg-[#f4d3d3] px-5 py-6 shadow-sm">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#efb7b8] text-[#a01921]">
+                      <Asterisk className="h-5 w-5" />
+                    </span>
+
+                    <div className="pointer-events-none absolute -bottom-8 right-3 h-24 w-24 rounded-full bg-[#8f0f1f]/20" />
+                    <div className="pointer-events-none absolute bottom-6 right-16 h-12 w-12 rounded-full bg-[#8f0f1f]/12" />
+
+                    <h3 className="mt-7 font-display text-4xl font-extrabold leading-tight tracking-tight text-[#9b111e]">
+                      Panic Button
+                    </h3>
+
+                    <p className="mt-4 max-w-[16rem] text-sm leading-relaxed text-[#9a2a2f]">
+                      Instant alert to family &amp; care team
+                    </p>
+
+                    <button
+                      type="button"
+                      aria-label="Trigger panic alert"
+                      className="absolute bottom-6 right-5 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-md transition hover:brightness-110"
+                    >
+                      <Plus className="h-6 w-6" />
+                    </button>
+                  </article>
                 </section>
               </div>
             </div>
