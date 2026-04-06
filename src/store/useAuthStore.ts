@@ -7,6 +7,17 @@ import {
   type RegisterPayload,
 } from "@/services/auth.service";
 
+/**
+ * Auth Store
+ 
+- Stores and manages authentication state.
+- Keeps JWT token + decoded user in global state.
+- Handles login, register, logout.
+- Persists token in localStorage.
+- Checks token expiration on page load.
+
+ */
+
 type JwtUserPayload = {
   sub: number | string;
   email: string;

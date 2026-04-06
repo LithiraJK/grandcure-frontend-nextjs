@@ -1,3 +1,12 @@
+/**
+ * API Client
+ * - Centralized function for making API requests to the backend.
+ * - Handles request construction, response parsing, and error handling.
+ * - Supports request timeouts and external abort signals for better UX.
+ * - Designed to work with the backend proxy route for seamless API communication.
+ * - Provides a consistent interface for services to interact with the backend API.
+ */
+
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 type RequestOptions = {

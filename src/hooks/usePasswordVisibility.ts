@@ -1,5 +1,7 @@
 import { useCallback, useState } from "react";
 
+// This hook manages the visibility state of password inputs
+
 export function usePasswordVisibility(defaultVisible = false) {
   const [isVisible, setIsVisible] = useState(defaultVisible);
 

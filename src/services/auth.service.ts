@@ -1,5 +1,15 @@
 import { apiRequest } from "@/lib/apiClient";
 
+/**
+ * Auth Service
+ 
+ - Talks to the backend authentication API.
+ - Sends login + register requests.
+ - Returns backend response data.
+ - Converts unknown errors into clean Error objects.
+ 
+ */
+
 export type ApiUserRole = "PATIENT" | "CARE_GIVER";
 
 export type LoginPayload = {

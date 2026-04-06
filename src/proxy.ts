@@ -1,5 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+/* This middleware:
+
+- Protects dashboard
+- Prevents logged‑in users from seeing login/register
+- Uses a session cookie to check login state
+- Redirects users correctly
+
+**/
+
 const AUTH_SESSION_COOKIE = "gc_session";
 
 export function proxy(request: NextRequest) {
