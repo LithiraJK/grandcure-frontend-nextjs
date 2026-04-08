@@ -6,6 +6,7 @@ import {
   register as registerRequest,
   type RegisterPayload,
 } from "@/services/auth.service";
+import { resolveJwtRole } from "@/lib/authRoles";
 
 /**
  * Auth Store
@@ -21,7 +22,7 @@ import {
 type JwtUserPayload = {
   sub: number | string;
   email: string;
-  role: string;
+  role?: string;
   isAvailable?: boolean;
   iat: number;
   exp: number;
@@ -92,8 +93,11 @@ function isTokenExpired(payload: JwtUserPayload) {
 }
 
 function normalizeUser(payload: JwtUserPayload): JwtUserPayload {
+  const resolvedRole = resolveJwtRole(payload as Record<string, unknown>);
+
   return {
     ...payload,
+    ...(resolvedRole ? { role: resolvedRole } : {}),
     isAvailable: payload.isAvailable ?? true,
   };
 }

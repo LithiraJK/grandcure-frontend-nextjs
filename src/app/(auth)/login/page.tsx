@@ -9,7 +9,7 @@ import { AuthInputField } from "@/components/auth/AuthInputField";
 import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
 import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
 import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
-import { mapJwtRoleToSessionRole } from "@/lib/authRoles";
+import { mapJwtRoleToSessionRole, resolveJwtRole } from "@/lib/authRoles";
 import { establishAuthSession } from "@/lib/authSession";
 import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
 import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
@@ -78,18 +78,14 @@ function LoginContent() {
 
     try {
       const authenticatedUser = await login(formValues);
+      const resolvedRole = resolveJwtRole(authenticatedUser as Record<string, unknown>);
+
       await establishAuthSession(
-        mapJwtRoleToSessionRole(
-          typeof authenticatedUser.role === "string" ? authenticatedUser.role : undefined,
-        ),
+        mapJwtRoleToSessionRole(resolvedRole),
         rememberDevice,
       );
       setFormMessage("Signed in successfully. Redirecting to your dashboard...");
-      router.push(
-        resolveDestinationByRole(
-          typeof authenticatedUser.role === "string" ? authenticatedUser.role : undefined,
-        ),
-      );
+      router.push(resolveDestinationByRole(resolvedRole));
       return;
     } catch (error) {
       setFormMessage(

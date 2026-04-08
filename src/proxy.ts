@@ -31,6 +31,14 @@ function getRequestedRole(pathname: string): SessionRole | null {
     return "member";
   }
 
+  if (pathname === "/dashboard/caregiver" || pathname.startsWith("/dashboard/caregiver/")) {
+    return "caregiver";
+  }
+
+  if (pathname === "/dashboard/patient" || pathname.startsWith("/dashboard/patient/")) {
+    return "patient";
+  }
+
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
     return "patient";
   }

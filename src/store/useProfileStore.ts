@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/apiClient";
 import { getCoordinates } from "@/utils/geolocation";
 
 type ProfileData = Record<string, unknown>;
+const AUTH_TOKEN_STORAGE_KEY = "gc_access_token";
 
 type UpdateProfileFormData = {
   address: string;
@@ -60,8 +61,15 @@ async function uploadDocuments(idFile?: File, certFile?: File): Promise<Document
     multipartForm.append("certDocument", certFile);
   }
 
+  const authToken = typeof window === "undefined"
+    ? null
+    : window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+
   const response = await fetch("/api/backend/users/profile/documents", {
     method: "POST",
+    headers: {
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    },
     body: multipartForm,
     cache: "no-store",
   });

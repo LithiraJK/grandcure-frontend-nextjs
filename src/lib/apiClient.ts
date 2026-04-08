@@ -30,9 +30,18 @@ type ApiErrorResponse = {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
+const AUTH_TOKEN_STORAGE_KEY = "gc_access_token";
 
 function resolveBaseUrl() {
   return API_BASE_URL ?? "/api/backend";
+}
+
+function getAuthToken() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
 }
 
 async function parseResponse<T>(response: Response): Promise<ApiSuccessResponse<T>> {
@@ -57,6 +66,7 @@ async function parseResponse<T>(response: Response): Promise<ApiSuccessResponse<
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<ApiSuccessResponse<T>> {
   const baseUrl = resolveBaseUrl();
+  const authToken = getAuthToken();
 
   const abortController = new AbortController();
   const timeoutMs = options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
@@ -81,6 +91,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       method: options.method ?? "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...(options.headers ?? {}),
       },
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
