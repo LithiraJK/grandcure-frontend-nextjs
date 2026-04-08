@@ -394,6 +394,13 @@ export default function CaregiverProfileUpdatePage() {
     }
   };
 
+  const handleResetChanges = () => {
+    setFormState(initialFormSnapshot);
+    setIdFile(null);
+    setCertFile(null);
+    setToast({ message: "Changes reverted to last saved values.", tone: "success" });
+  };
+
   return (
     <CaregiverShell activeItem="profile" pageSubtitle="Caregiver Profile Update">
       <section className="mx-auto max-w-4xl rounded-3xl bg-[#f7f9fc] p-5 sm:p-8">
@@ -576,7 +583,15 @@ export default function CaregiverProfileUpdatePage() {
               </label>
             </div>
 
-            <div className="mt-8 flex justify-end">
+            <div className="mt-8 flex flex-wrap items-center justify-end gap-3">
+              <button
+                type="button"
+                disabled={isLoading || !hasUnsavedChanges}
+                onClick={handleResetChanges}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[#eef4fa] px-6 text-sm font-semibold text-[#2f4f64] transition hover:bg-[#e4edf6] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Reset changes
+              </button>
               <button
                 type="submit"
                 disabled={isLoading || !isFormValid}
