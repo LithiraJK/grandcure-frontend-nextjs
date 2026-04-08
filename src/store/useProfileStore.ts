@@ -13,6 +13,7 @@ type UpdateProfileFormData = {
 type DocumentsUploadResponse = {
   idDocumentUrl?: string;
   certDocumentUrl?: string;
+  profileImageUrl?: string;
 };
 
 type ProfileState = {
@@ -23,6 +24,7 @@ type ProfileState = {
     formData: UpdateProfileFormData,
     idFile?: File,
     certFile?: File,
+    profileImageFile?: File,
   ) => Promise<void>;
 };
 
@@ -46,8 +48,24 @@ function extractResponseData<T>(payload: unknown): T {
   return payload.data as T;
 }
 
-async function uploadDocuments(idFile?: File, certFile?: File): Promise<DocumentsUploadResponse> {
-  if (!idFile && !certFile) {
+function sanitizePatchPayload(payload: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+
+      if (typeof value === "string") {
+        return value.trim().length > 0;
+      }
+
+      return true;
+    }),
+  );
+}
+
+async function uploadDocuments(idFile?: File, certFile?: File, profileImageFile?: File): Promise<DocumentsUploadResponse> {
+  if (!idFile && !certFile && !profileImageFile) {
     return {};
   }
 
@@ -59,6 +77,10 @@ async function uploadDocuments(idFile?: File, certFile?: File): Promise<Document
 
   if (certFile) {
     multipartForm.append("certDocument", certFile);
+  }
+
+  if (profileImageFile) {
+    multipartForm.append("profileImage", profileImageFile);
   }
 
   const authToken = typeof window === "undefined"
@@ -102,20 +124,27 @@ export const useProfileStore = create<ProfileState>((set) => ({
     }
   },
 
-  updateCaregiverProfile: async (formData, idFile, certFile) => {
+  updateCaregiverProfile: async (formData, idFile, certFile, profileImageFile) => {
     set({ isLoading: true });
 
     try {
-      const documents = await uploadDocuments(idFile, certFile);
+      const documents = await uploadDocuments(idFile, certFile, profileImageFile);
       const coordinates = await getCoordinates(formData.address);
 
-      const payload: Record<string, unknown> = {
+      const rawPayload: Record<string, unknown> = {
         ...formData,
         ...(documents.idDocumentUrl ? { idDocumentUrl: documents.idDocumentUrl } : {}),
         ...(documents.certDocumentUrl ? { certDocumentUrl: documents.certDocumentUrl } : {}),
-        latitude: coordinates?.latitude ?? null,
-        longitude: coordinates?.longitude ?? null,
+        ...(documents.profileImageUrl ? { profileImageUrl: documents.profileImageUrl } : {}),
+        ...(coordinates
+          ? {
+              latitude: coordinates.latitude,
+              longitude: coordinates.longitude,
+            }
+          : {}),
       };
+
+      const payload = sanitizePatchPayload(rawPayload);
 
       const response = await apiRequest<ProfileData>("/users/profile", {
         method: "PATCH",

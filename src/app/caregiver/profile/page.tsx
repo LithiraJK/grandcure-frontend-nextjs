@@ -161,6 +161,11 @@ export default function CaregiverProfileUpdatePage() {
   const [toast, setToast] = useState<ToastState>(null);
   const [isBootstrapLoading, setIsBootstrapLoading] = useState(true);
   const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const loadProfile = useCallback(async () => {
     setIsBootstrapLoading(true);
@@ -332,7 +337,7 @@ export default function CaregiverProfileUpdatePage() {
     };
   }, [hasUnsavedChanges]);
 
-  if (!canRender) {
+  if (!isHydrated || !canRender) {
     return (
       <main className="min-h-screen bg-[#f7f9fc] px-4 py-8 sm:px-6 lg:px-8">
         <section className="mx-auto max-w-4xl rounded-2xl bg-white p-6 shadow-lg shadow-[#d8e3f0]/35">
@@ -503,6 +508,7 @@ export default function CaregiverProfileUpdatePage() {
         },
         idFile ?? undefined,
         certFile ?? undefined,
+        profileImageFile ?? undefined,
       );
 
       setToast({ message: "Profile updated successfully.", tone: "success" });
