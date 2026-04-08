@@ -91,6 +91,22 @@ function validateFile(file: File): string | null {
   return null;
 }
 
+function countDigits(value: string) {
+  return value.replace(/\D/g, "").length;
+}
+
+function isFutureDate(value: string) {
+  if (!value) {
+    return false;
+  }
+
+  const selected = new Date(`${value}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected.getTime() > today.getTime();
+}
+
 export default function CaregiverProfileUpdatePage() {
   const router = useRouter();
 
@@ -172,16 +188,31 @@ export default function CaregiverProfileUpdatePage() {
     return Number.isFinite(parsed) && parsed >= 0;
   }, [trimmedForm.hourlyRate]);
 
+  const isPhoneValid = useMemo(() => countDigits(trimmedForm.phoneNumber) >= 10, [trimmedForm.phoneNumber]);
+
+  const isDateOfBirthValid = useMemo(
+    () => Boolean(trimmedForm.dateOfBirth) && !isFutureDate(trimmedForm.dateOfBirth),
+    [trimmedForm.dateOfBirth],
+  );
+
   const isFormValid = useMemo(
     () =>
       Boolean(
         trimmedForm.phoneNumber &&
-          trimmedForm.dateOfBirth &&
+          isPhoneValid &&
+          isDateOfBirthValid &&
           trimmedForm.address &&
           trimmedForm.designation &&
           isHourlyRateValid,
       ),
-    [isHourlyRateValid, trimmedForm.address, trimmedForm.dateOfBirth, trimmedForm.designation, trimmedForm.phoneNumber],
+    [
+      isDateOfBirthValid,
+      isHourlyRateValid,
+      isPhoneValid,
+      trimmedForm.address,
+      trimmedForm.designation,
+      trimmedForm.phoneNumber,
+    ],
   );
 
   if (!canRender) {
@@ -282,6 +313,9 @@ export default function CaregiverProfileUpdatePage() {
                   placeholder="+1 555 000 0000"
                   className="h-12 w-full rounded-xl bg-[#f7f9fc] px-4 text-sm text-[#191c1e] outline-none ring-1 ring-gray-300/15 transition focus:ring-2 focus:ring-[#8ec7e8]"
                 />
+                {!isPhoneValid && formState.phoneNumber.trim() ? (
+                  <p className="text-xs font-medium text-[#9b2f2f]">Enter a valid phone number (at least 10 digits).</p>
+                ) : null}
               </label>
 
               <label className="space-y-1.5">
@@ -293,6 +327,9 @@ export default function CaregiverProfileUpdatePage() {
                   required
                   className="h-12 w-full rounded-xl bg-[#f7f9fc] px-4 text-sm text-[#191c1e] outline-none ring-1 ring-gray-300/15 transition focus:ring-2 focus:ring-[#8ec7e8]"
                 />
+                {!isDateOfBirthValid && formState.dateOfBirth.trim() ? (
+                  <p className="text-xs font-medium text-[#9b2f2f]">Date of birth cannot be in the future.</p>
+                ) : null}
               </label>
 
               <label className="space-y-1.5 sm:col-span-2">
@@ -367,6 +404,19 @@ export default function CaregiverProfileUpdatePage() {
                   Choose Image
                 </span>
                 <p className="mt-3 truncate text-xs text-[#4e5960]">{idFile ? idFile.name : "No file selected"}</p>
+                {idFile ? (
+                  <button
+                    type="button"
+                    className="mt-2 text-xs font-semibold text-[#7f3f3f] transition hover:text-[#652f2f]"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setIdFile(null);
+                    }}
+                  >
+                    Remove file
+                  </button>
+                ) : null}
                 <input
                   type="file"
                   accept=".jpg,.jpeg,.png,.webp"
@@ -395,6 +445,19 @@ export default function CaregiverProfileUpdatePage() {
                   Choose Image
                 </span>
                 <p className="mt-3 truncate text-xs text-[#4e5960]">{certFile ? certFile.name : "No file selected"}</p>
+                {certFile ? (
+                  <button
+                    type="button"
+                    className="mt-2 text-xs font-semibold text-[#7f3f3f] transition hover:text-[#652f2f]"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setCertFile(null);
+                    }}
+                  >
+                    Remove file
+                  </button>
+                ) : null}
                 <input
                   type="file"
                   accept=".jpg,.jpeg,.png,.webp"
