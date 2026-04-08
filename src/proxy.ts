@@ -27,6 +27,10 @@ function resolveRoleHome(role: SessionRole | null) {
 }
 
 function getRequestedRole(pathname: string): SessionRole | null {
+  if (pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")) {
+    return "member";
+  }
+
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
     return "patient";
   }
