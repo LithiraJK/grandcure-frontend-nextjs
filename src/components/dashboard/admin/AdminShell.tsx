@@ -4,6 +4,8 @@ import { LayoutDashboard, Star, UsersRound } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { SignOutButton } from "@/components/auth/SignOutButton";
+
 type AdminShellProps = {
   children: ReactNode;
   activeItem: "dashboard" | "users" | "reviews";
@@ -57,6 +59,10 @@ export function AdminShell({ children, activeItem, title, subtitle }: AdminShell
               );
             })}
           </nav>
+
+          <div className="mt-auto pt-4">
+            <SignOutButton />
+          </div>
         </aside>
 
         <section className="min-h-0 min-w-0 flex-1 overflow-hidden p-2 sm:p-4 lg:p-6">
