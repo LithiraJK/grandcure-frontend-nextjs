@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 
 import { CaregiverShell } from "@/components/dashboard/caregiver/CaregiverShell";
 import { ROUTES } from "@/lib/routes";
@@ -124,6 +124,23 @@ export default function CaregiverProfileUpdatePage() {
   const [certFile, setCertFile] = useState<File | null>(null);
   const [activeDropZone, setActiveDropZone] = useState<"id" | "cert" | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
+  const [isBootstrapLoading, setIsBootstrapLoading] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
+
+  const loadProfile = useCallback(async () => {
+    setIsBootstrapLoading(true);
+    setProfileLoadError(null);
+
+    try {
+      await fetchProfile();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load caregiver profile.";
+      setProfileLoadError(message);
+      setToast({ message, tone: "error" });
+    } finally {
+      setIsBootstrapLoading(false);
+    }
+  }, [fetchProfile]);
 
   useEffect(() => {
     if (!isAuthenticated || !isCaregiverRole(userRole)) {
@@ -131,8 +148,8 @@ export default function CaregiverProfileUpdatePage() {
       return;
     }
 
-    void fetchProfile();
-  }, [fetchProfile, isAuthenticated, router, userRole]);
+    void loadProfile();
+  }, [isAuthenticated, loadProfile, router, userRole]);
 
   useEffect(() => {
     if (!profile) {
@@ -266,6 +283,40 @@ export default function CaregiverProfileUpdatePage() {
           <p className="text-sm font-medium text-[#191c1e]">Redirecting to login...</p>
         </section>
       </main>
+    );
+  }
+
+  if (isBootstrapLoading && !profile) {
+    return (
+      <CaregiverShell activeItem="profile" pageSubtitle="Caregiver Profile Update">
+        <section className="mx-auto max-w-4xl rounded-3xl bg-[#f7f9fc] p-5 sm:p-8">
+          <article className="rounded-2xl bg-white p-8 shadow-lg shadow-[#d8e3f0]/35">
+            <p className="text-sm font-medium text-[#4e5960]">Loading profile details...</p>
+          </article>
+        </section>
+      </CaregiverShell>
+    );
+  }
+
+  if (!isBootstrapLoading && !profile && profileLoadError) {
+    return (
+      <CaregiverShell activeItem="profile" pageSubtitle="Caregiver Profile Update">
+        <section className="mx-auto max-w-4xl rounded-3xl bg-[#f7f9fc] p-5 sm:p-8">
+          <article className="rounded-2xl bg-white p-8 shadow-lg shadow-[#d8e3f0]/35">
+            <p className="text-sm font-semibold text-[#9b2f2f]">Unable to load profile details.</p>
+            <p className="mt-2 text-sm text-[#4e5960]">{profileLoadError}</p>
+            <button
+              type="button"
+              className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-linear-to-r from-[#0d6b9a] to-[#1f9ab7] px-5 text-sm font-semibold text-white transition hover:from-[#0b5d87] hover:to-[#1b89a3]"
+              onClick={() => {
+                void loadProfile();
+              }}
+            >
+              Retry
+            </button>
+          </article>
+        </section>
+      </CaregiverShell>
     );
   }
 
