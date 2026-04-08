@@ -27,10 +27,6 @@ export function UrgentRequestCard({
   const [secondsLeft, setSecondsLeft] = useState(initialCountdownSeconds);
 
   useEffect(() => {
-    setSecondsLeft(initialCountdownSeconds);
-  }, [assignment.id, initialCountdownSeconds]);
-
-  useEffect(() => {
     if (secondsLeft <= 0) {
       return;
     }

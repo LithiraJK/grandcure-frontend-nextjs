@@ -49,6 +49,20 @@ function LoginContent() {
   const resolvedSearchMessage = dismissedSearchMessageKey === searchMessageKey ? null : searchMessage;
   const activeMessage = formMessage ?? resolvedSearchMessage;
 
+  const resolveDestinationByRole = (role: string | undefined) => {
+    const sessionRole = mapJwtRoleToSessionRole(role);
+
+    if (sessionRole === "caregiver") {
+      return ROUTES.caregiver;
+    }
+
+    if (sessionRole === "member") {
+      return ROUTES.admin;
+    }
+
+    return ROUTES.dashboard;
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -71,7 +85,11 @@ function LoginContent() {
         rememberDevice,
       );
       setFormMessage("Signed in successfully. Redirecting to your dashboard...");
-      router.push(ROUTES.dashboard);
+      router.push(
+        resolveDestinationByRole(
+          typeof authenticatedUser.role === "string" ? authenticatedUser.role : undefined,
+        ),
+      );
       return;
     } catch (error) {
       setFormMessage(

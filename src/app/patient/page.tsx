@@ -107,7 +107,7 @@ function StatusBadge({ status }: { status: RequestStatus }) {
   );
 }
 
-export default function DashboardPage() {
+export default function PatientDashboardPage() {
   return (
     <AuthSessionGuard>
       <main className="h-screen overflow-hidden bg-neutral">
