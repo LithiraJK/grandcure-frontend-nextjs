@@ -34,7 +34,7 @@ const primaryNavItems: NavItem[] = [
   { key: "dashboard", label: "Dashboard", href: ROUTES.caregiver, icon: LayoutDashboard },
   { key: "requests", label: "Requests", icon: ClipboardList },
   { key: "schedule", label: "Schedule", icon: ClipboardList },
-  { key: "profile", label: "Profile", href: `${ROUTES.caregiver}/profile`, icon: User },
+  { key: "profile", label: "Profile", href: ROUTES.caregiverProfile, icon: User },
   { key: "escalation", label: "Admin Escalation", icon: CircleHelp },
 ];
 
