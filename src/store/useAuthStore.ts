@@ -22,6 +22,7 @@ type JwtUserPayload = {
   sub: number | string;
   email: string;
   role: string;
+  isAvailable?: boolean;
   iat: number;
   exp: number;
   [key: string]: unknown;
@@ -37,6 +38,7 @@ type AuthState = {
   registerError: string | null;
   login: (payload: LoginPayload) => Promise<JwtUserPayload>;
   register: (payload: RegisterPayload) => Promise<void>;
+  toggleAvailability: () => void;
   logout: () => void;
 };
 
@@ -89,6 +91,13 @@ function isTokenExpired(payload: JwtUserPayload) {
   return payload.exp <= nowInSeconds;
 }
 
+function normalizeUser(payload: JwtUserPayload): JwtUserPayload {
+  return {
+    ...payload,
+    isAvailable: payload.isAvailable ?? true,
+  };
+}
+
 function getInitialAuthState() {
   const storedToken = getStoredToken();
 
@@ -113,7 +122,7 @@ function getInitialAuthState() {
 
   return {
     token: storedToken,
-    user: decodedUser,
+    user: normalizeUser(decodedUser),
     isAuthenticated: true,
   };
 }
@@ -140,17 +149,19 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error("Received invalid access token.");
       }
 
+      const normalizedUser = normalizeUser(decodedUser);
+
       setStoredToken(access_token);
 
       set({
         token: access_token,
-        user: decodedUser,
+        user: normalizedUser,
         isAuthenticated: true,
         isLoginLoading: false,
         loginError: null,
       });
 
-      return decodedUser;
+      return normalizedUser;
     } catch (error) {
       clearStoredToken();
       set({
@@ -179,6 +190,21 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       throw error;
     }
+  },
+
+  toggleAvailability: () => {
+    set((state) => {
+      if (!state.user) {
+        return state;
+      }
+
+      return {
+        user: {
+          ...state.user,
+          isAvailable: !state.user.isAvailable,
+        },
+      };
+    });
   },
 
   logout: () => {
