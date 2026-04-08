@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export function Hero() {
   return (
@@ -41,7 +42,17 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
           className="relative hidden min-h-[420px] lg:col-span-2 lg:block"
         >
-          <div className="absolute inset-0 rounded-[2.5rem] bg-[radial-gradient(circle_at_25%_30%,rgba(17,98,157,0.16),transparent_54%),radial-gradient(circle_at_72%_68%,rgba(38,167,188,0.18),transparent_52%),linear-gradient(145deg,rgba(255,255,255,0.95),rgba(235,243,250,0.72))]" />
+          <div className="absolute inset-0 overflow-hidden rounded-[2.5rem]">
+            <Image
+              src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1200&q=80"
+              alt="Compassionate caregiver assisting an elderly person at home"
+              fill
+              className="object-cover"
+              sizes="(min-width: 1024px) 34vw, 100vw"
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(247,249,252,0.12),rgba(17,98,157,0.18))]" />
+          </div>
           <div className="absolute -left-8 top-16 h-24 w-24 rounded-full bg-[#d9edf8]/75 backdrop-blur-xl" />
           <div className="absolute bottom-16 right-6 h-28 w-28 rounded-full bg-[#d8f4f0]/75 backdrop-blur-xl" />
         </motion.div>
