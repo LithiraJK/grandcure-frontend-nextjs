@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/branding/BrandLogo";
 import { ROUTES } from "@/lib/routes";
 
 export function PublicFooter() {
@@ -8,7 +9,7 @@ export function PublicFooter() {
     <hr className="my-10" />
       <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 text-[#5f7487] lg:grid-cols-[1fr_auto_auto] lg:items-center">
         <div>
-          <p className="font-display text-2xl font-extrabold tracking-tight text-[#1f4f73]">GrandCure</p>
+          <BrandLogo className="text-2xl" />
           <p className="mt-2 text-sm leading-relaxed sm:text-base">
             @ 2026 GrandCure. Editorial Healthcare
             <br />

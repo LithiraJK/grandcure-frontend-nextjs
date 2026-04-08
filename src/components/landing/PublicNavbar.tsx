@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/branding/BrandLogo";
 import { ROUTES } from "@/lib/routes";
 
 const navItems = [
@@ -14,13 +15,7 @@ export function PublicNavbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-10">
       <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between rounded-full bg-white/70 px-5 backdrop-blur-md sm:px-7">
-        <Link
-          href="/"
-          className="font-display text-2xl font-extrabold tracking-tight text-[#191c1e] sm:text-3xl"
-          aria-label="GrandCure home"
-        >
-          GrandCure
-        </Link>
+        <BrandLogo className="text-2xl sm:text-3xl" />
 
         <div className="hidden items-center gap-6 md:flex">
           {navItems.map((item) => (

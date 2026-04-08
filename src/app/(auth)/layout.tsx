@@ -1,6 +1,8 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 
+import { BrandLogo } from "@/components/branding/BrandLogo";
+
 type AuthLayoutProps = {
   children: ReactNode;
 };
@@ -18,9 +20,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       */}
       <section className="relative flex flex-col justify-center px-6 pt-12 pb-6 sm:px-10 lg:px-14 lg:py-12">
         <div className="w-full max-w-xl mx-auto lg:max-w-[31rem] space-y-4 lg:space-y-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#1f6797]">
-            Welcome to GrandCure
-          </p>
+          <BrandLogo className="inline-block text-3xl sm:text-4xl" />
+
+          
 
           {/* Text size adjusted for mobile screens */}
           <h1 className="font-display text-4xl sm:text-5xl font-bold leading-[1.05] tracking-tight text-[#1f252b] xl:text-[3.55rem]">
