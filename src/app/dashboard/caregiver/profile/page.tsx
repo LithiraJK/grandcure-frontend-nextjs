@@ -119,6 +119,7 @@ export default function CaregiverProfileUpdatePage() {
   const updateCaregiverProfile = useProfileStore((state) => state.updateCaregiverProfile);
 
   const [formState, setFormState] = useState<FormState>(initialFormState);
+  const [initialFormSnapshot, setInitialFormSnapshot] = useState<FormState>(initialFormState);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
   const [activeDropZone, setActiveDropZone] = useState<"id" | "cert" | null>(null);
@@ -140,13 +141,16 @@ export default function CaregiverProfileUpdatePage() {
 
     const source = profile as Record<string, unknown>;
 
-    setFormState({
+    const nextFormState = {
       phoneNumber: toText(source.phoneNumber),
       dateOfBirth: normalizeDateForInput(source.dateOfBirth),
       address: toText(source.address),
       designation: toText(source.designation),
       hourlyRate: toNumberText(source.hourlyRate),
-    });
+    };
+
+    setFormState(nextFormState);
+    setInitialFormSnapshot(nextFormState);
   }, [profile]);
 
   useEffect(() => {
@@ -177,6 +181,17 @@ export default function CaregiverProfileUpdatePage() {
       hourlyRate: formState.hourlyRate.trim(),
     }),
     [formState],
+  );
+
+  const trimmedInitialForm = useMemo(
+    () => ({
+      phoneNumber: initialFormSnapshot.phoneNumber.trim(),
+      dateOfBirth: initialFormSnapshot.dateOfBirth.trim(),
+      address: initialFormSnapshot.address.trim(),
+      designation: initialFormSnapshot.designation.trim(),
+      hourlyRate: initialFormSnapshot.hourlyRate.trim(),
+    }),
+    [initialFormSnapshot],
   );
 
   const isHourlyRateValid = useMemo(() => {
@@ -214,6 +229,35 @@ export default function CaregiverProfileUpdatePage() {
       trimmedForm.phoneNumber,
     ],
   );
+
+  const hasUnsavedChanges = useMemo(
+    () =>
+      trimmedForm.phoneNumber !== trimmedInitialForm.phoneNumber ||
+      trimmedForm.dateOfBirth !== trimmedInitialForm.dateOfBirth ||
+      trimmedForm.address !== trimmedInitialForm.address ||
+      trimmedForm.designation !== trimmedInitialForm.designation ||
+      trimmedForm.hourlyRate !== trimmedInitialForm.hourlyRate ||
+      Boolean(idFile) ||
+      Boolean(certFile),
+    [certFile, idFile, trimmedForm, trimmedInitialForm],
+  );
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   if (!canRender) {
     return (
@@ -284,6 +328,15 @@ export default function CaregiverProfileUpdatePage() {
       );
 
       setToast({ message: "Profile updated successfully.", tone: "success" });
+      setInitialFormSnapshot({
+        phoneNumber: trimmedForm.phoneNumber,
+        dateOfBirth: trimmedForm.dateOfBirth,
+        address: trimmedForm.address,
+        designation: trimmedForm.designation,
+        hourlyRate: trimmedForm.hourlyRate,
+      });
+      setIdFile(null);
+      setCertFile(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update caregiver profile.";
       setToast({ message, tone: "error" });
@@ -294,6 +347,11 @@ export default function CaregiverProfileUpdatePage() {
     <CaregiverShell activeItem="profile" pageSubtitle="Caregiver Profile Update">
       <section className="mx-auto max-w-4xl rounded-3xl bg-[#f7f9fc] p-5 sm:p-8">
         <form className="space-y-6" onSubmit={handleSubmit}>
+          {hasUnsavedChanges ? (
+            <p className="rounded-xl bg-[#fff4df] px-4 py-3 text-sm font-medium text-[#7a541b]">
+              You have unsaved changes.
+            </p>
+          ) : null}
           <article className="rounded-2xl bg-white p-8 shadow-lg shadow-[#d8e3f0]/35">
             <h1 className="font-display text-3xl font-extrabold tracking-tight text-[#191c1e]">
               Personal Details
