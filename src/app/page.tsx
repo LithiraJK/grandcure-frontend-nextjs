@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { CaregiverProfiles } from "@/components/landing/CaregiverProfiles";
+import { Faq } from "@/components/landing/Faq";
 import { Features } from "@/components/landing/Features";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { Hero } from "@/components/landing/Hero";
@@ -28,6 +29,7 @@ export default function HomePage() {
       <Features />
       <CaregiverProfiles />
       <Testimonials />
+      <Faq />
       <FinalCta />
       <PublicFooter />
     </main>

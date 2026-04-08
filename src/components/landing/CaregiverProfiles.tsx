@@ -42,7 +42,10 @@ const caregivers: CaregiverProfile[] = [
 
 export function CaregiverProfiles() {
   return (
-    <section className="bg-[radial-gradient(120%_120%_at_10%_0%,#eef6ff_0%,#f7f9fc_55%,#f2f8fb_100%)] px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
+    <section
+      id="workers"
+      className="bg-[radial-gradient(120%_120%_at_10%_0%,#eef6ff_0%,#f7f9fc_55%,#f2f8fb_100%)] px-4 py-16 sm:px-6 lg:px-10 lg:py-24"
+    >
       <div className="mx-auto w-full max-w-7xl space-y-10">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#3c596f]">

@@ -29,7 +29,7 @@ const features: FeatureItem[] = [
 
 export function Features() {
   return (
-    <section className="bg-[#f7f9fc] px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
+    <section id="features" className="bg-[#f7f9fc] px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
       <div className="mx-auto w-full max-w-7xl space-y-10">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#3c596f]">
