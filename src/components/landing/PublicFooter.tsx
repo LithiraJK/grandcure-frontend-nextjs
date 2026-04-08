@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BookOpenText, Share2 } from "lucide-react";
 
 import { ROUTES } from "@/lib/routes";
 
