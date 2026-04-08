@@ -106,7 +106,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-md">
+    <div className="mx-auto w-full max-w-xl rounded-[2.25rem] border border-[#e3e8ef] bg-[#f8fafc]/96 p-6 shadow-[0_32px_70px_-46px_rgba(20,38,54,0.62)] sm:p-8 md:p-9">
       <div className="space-y-2">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
           Welcome back
