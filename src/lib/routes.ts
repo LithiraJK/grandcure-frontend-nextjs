@@ -5,6 +5,7 @@ export const ROUTES = {
   admin: "/admin",
   patient: "/patient",
   caregiver: "/caregiver",
+  caregiverRequests: "/caregiver/requests",
   caregiverProfile: "/caregiver/profile",
   register: "/register",
   registerDetails: "/register/details",
