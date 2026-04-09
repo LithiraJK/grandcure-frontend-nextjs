@@ -41,6 +41,7 @@ type AssignmentState = {
   historyAssignments: Assignment[];
   patientAssignments: Assignment[];
   isLoading: boolean;
+  isPendingAccessDenied: boolean;
   fetchPending: () => Promise<void>;
   fetchCaregiverHistory: () => Promise<void>;
   fetchPatientAssignments: () => Promise<void>;
@@ -57,6 +58,7 @@ type ToastTone = "success" | "error";
 const BACKEND_BASE_URL = "/api/backend";
 
 const ACTIVE_STATUSES: AssignmentStatus[] = ["ACCEPTED", "IN_PROGRESS"];
+let hasShownPendingAccessDeniedToast = false;
 
 function emitToast(message: string, tone: ToastTone) {
   if (typeof window !== "undefined") {
@@ -247,8 +249,13 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
   historyAssignments: [],
   patientAssignments: [],
   isLoading: false,
+  isPendingAccessDenied: false,
 
   fetchPending: async () => {
+    if (get().isPendingAccessDenied) {
+      return;
+    }
+
     set({ isLoading: true });
 
     try {
@@ -258,12 +265,32 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
 
       const pendingAssignments = normalizeAssignmentList(response.data);
       const historyAssignments = get().historyAssignments;
+      hasShownPendingAccessDeniedToast = false;
 
       set({
         pendingAssignments,
         activeAssignments: deriveActiveAssignments(pendingAssignments, historyAssignments),
+        isPendingAccessDenied: false,
       });
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        const historyAssignments = get().historyAssignments;
+        const fallbackPending = historyAssignments.filter((assignment) => assignment.status === "PENDING");
+
+        set({
+          pendingAssignments: fallbackPending,
+          activeAssignments: deriveActiveAssignments(fallbackPending, historyAssignments),
+          isPendingAccessDenied: true,
+        });
+
+        if (!hasShownPendingAccessDeniedToast) {
+          emitToast("Pending offers are not available for this account right now.", "error");
+          hasShownPendingAccessDeniedToast = true;
+        }
+
+        return;
+      }
+
       emitToast("Failed to load pending assignments.", "error");
       console.error(error);
     } finally {

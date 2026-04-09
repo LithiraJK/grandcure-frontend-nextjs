@@ -107,18 +107,6 @@ export function CaregiverShell({ children, activeItem, pageSubtitle }: Caregiver
                 {pageSubtitle ? <p className="text-xs text-secondary">{pageSubtitle}</p> : null}
               </div>
 
-              <label className="relative block w-full lg:max-w-xl lg:pl-4">
-                <Search
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary"
-                />
-                <input
-                  type="search"
-                  placeholder="Search patients or requests..."
-                  className="h-11 w-full rounded-3xl border border-transparent bg-[#eef5fb] pl-10 pr-4 text-sm text-zinc-800 outline-none transition placeholder:text-secondary focus:border-[#8ec7e8] focus:bg-white"
-                />
-              </label>
-
               <div className="flex w-full items-center justify-end gap-2 sm:gap-3 lg:ml-auto lg:w-auto">
                 <button
                   type="button"

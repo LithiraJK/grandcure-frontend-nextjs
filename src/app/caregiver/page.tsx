@@ -31,6 +31,7 @@ export default function CaregiverDashboardPage() {
 
   const pendingAssignments = useAssignmentStore((state) => state.pendingAssignments);
   const isLoadingAssignments = useAssignmentStore((state) => state.isLoading);
+  const isPendingAccessDenied = useAssignmentStore((state) => state.isPendingAccessDenied);
   const fetchPending = useAssignmentStore((state) => state.fetchPending);
 
   useEffect(() => {
@@ -73,6 +74,12 @@ export default function CaregiverDashboardPage() {
                 View History
               </button>
             </div>
+
+            {isPendingAccessDenied ? (
+              <div className="mb-4 rounded-3xl border border-[#f3d3a8] bg-[#fff6e9] p-4 text-sm text-[#7a541b] shadow-soft">
+                Pending offers are currently restricted for this account. You can still view active and history requests.
+              </div>
+            ) : null}
 
             {isLoadingAssignments ? (
               <div className="rounded-3xl border border-[#d8e4ee] bg-white p-6 text-sm text-secondary shadow-soft">

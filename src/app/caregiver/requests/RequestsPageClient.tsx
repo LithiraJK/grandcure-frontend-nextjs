@@ -162,6 +162,7 @@ export default function RequestsPageClient() {
   const userRole = useAuthStore((state) => state.user?.role);
 
   const isLoading = useAssignmentStore((state) => state.isLoading);
+  const isPendingAccessDenied = useAssignmentStore((state) => state.isPendingAccessDenied);
   const pendingAssignments = useAssignmentStore((state) => state.pendingAssignments);
   const activeAssignments = useAssignmentStore((state) => state.activeAssignments);
   const historyAssignments = useAssignmentStore((state) => state.historyAssignments);
@@ -473,6 +474,12 @@ export default function RequestsPageClient() {
             History ({historyAssignments.length})
           </button>
         </div>
+
+        {activeTab === "pending" && isPendingAccessDenied ? (
+          <div className="rounded-2xl border border-[#f3d3a8] bg-[#fff6e9] px-4 py-3 text-sm text-[#7a541b] shadow-soft">
+            Pending offers are currently restricted for this account. Try Active or History tabs.
+          </div>
+        ) : null}
 
         {isLoading ? (
           <div className="inline-flex items-center gap-2 rounded-2xl border border-[#d8e4ee] bg-white px-4 py-3 text-sm text-secondary shadow-soft">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 
 import { PatientShell } from "@/components/dashboard/patient/PatientShell";
 import { ROUTES } from "@/lib/routes";
@@ -159,6 +159,7 @@ export default function PatientProfilePage() {
 	const [coordinatesSnapshot, setCoordinatesSnapshot] = useState<Coordinates | null>(null);
 	const [selectedCoordinates, setSelectedCoordinates] = useState<Coordinates | null>(null);
 	const [isResolvingLocation, setIsResolvingLocation] = useState(false);
+	const locationSyncSourceRef = useRef<"address" | "coordinates" | null>(null);
 	const [idFile, setIdFile] = useState<File | null>(null);
 	const [activeDropZone, setActiveDropZone] = useState<"avatar" | "id" | null>(null);
 	const [toast, setToast] = useState<ToastState>(null);
@@ -212,6 +213,7 @@ export default function PatientProfilePage() {
 				? { latitude: source.latitude, longitude: source.longitude }
 				: null;
 
+		locationSyncSourceRef.current = nextCoordinates ? "coordinates" : null;
 		setFormState(nextFormState);
 		setInitialFormSnapshot(nextFormState);
 		setProfileImageUrl(nextProfileImageUrl);
@@ -286,6 +288,44 @@ export default function PatientProfilePage() {
 			),
 		[isDateOfBirthValid, isPhoneValid, isPhoneRegexValid, trimmedForm.address, trimmedForm.phoneNumber],
 	);
+
+	useEffect(() => {
+		if (!trimmedForm.address.trim()) {
+			return;
+		}
+
+		if (locationSyncSourceRef.current === "coordinates") {
+			locationSyncSourceRef.current = null;
+			return;
+		}
+
+		const timeoutId = window.setTimeout(() => {
+			void (async () => {
+				const coordinates = await geocodeAddressCoordinates(trimmedForm.address);
+
+				if (!coordinates) {
+					setSelectedCoordinates(null);
+					return;
+				}
+
+				setSelectedCoordinates((current) => {
+					if (
+						current?.latitude === coordinates.latitude &&
+						current?.longitude === coordinates.longitude
+					) {
+						return current;
+					}
+
+					return coordinates;
+				});
+				locationSyncSourceRef.current = null;
+			})();
+		}, 600);
+
+		return () => {
+			window.clearTimeout(timeoutId);
+		};
+	}, [trimmedForm.address]);
 
 	const hasUnsavedChanges = useMemo(
 		() =>
@@ -378,6 +418,11 @@ export default function PatientProfilePage() {
 
 	const onFieldChange = (key: keyof FormState) => (event: ChangeEvent<HTMLInputElement>) => {
 		const { value } = event.target;
+
+		if (key === "address") {
+			locationSyncSourceRef.current = "address";
+		}
+
 		setFormState((previous) => ({ ...previous, [key]: value }));
 
 		if (key === "address") {
@@ -396,6 +441,7 @@ export default function PatientProfilePage() {
 				return;
 			}
 
+			locationSyncSourceRef.current = "coordinates";
 			setSelectedCoordinates(coordinates);
 
 			const resolvedAddress = await reverseGeocodeAddress(coordinates.latitude, coordinates.longitude);
@@ -507,11 +553,23 @@ export default function PatientProfilePage() {
 		}
 
 		try {
+			const resolvedCoordinates = selectedCoordinates ?? (await geocodeAddressCoordinates(trimmedForm.address));
+
+			if (!resolvedCoordinates) {
+				setToast({
+					message: "Unable to resolve location coordinates for the selected address.",
+					tone: "error",
+				});
+				return;
+			}
+
 			await updatePatientProfile(
 				{
 					phoneNumber: normalizedPhoneNumber,
 					dateOfBirth: trimmedForm.dateOfBirth,
 					address: trimmedForm.address,
+					latitude: resolvedCoordinates.latitude,
+					longitude: resolvedCoordinates.longitude,
 				},
 				idFile ?? undefined,
 				profileImageFile ?? undefined,
@@ -524,8 +582,8 @@ export default function PatientProfilePage() {
 				address: trimmedForm.address,
 			});
 			setProfileImageSnapshot({ url: profileImageUrl });
-			setCoordinatesSnapshot(selectedCoordinates);
-			setSelectedCoordinates(selectedCoordinates);
+			setCoordinatesSnapshot(resolvedCoordinates);
+			setSelectedCoordinates(resolvedCoordinates);
 			setProfileImageFile(null);
 			setProfileImagePreviewUrl((previous) => {
 				if (previous) {
@@ -542,6 +600,7 @@ export default function PatientProfilePage() {
 	};
 
 	const handleResetChanges = () => {
+		locationSyncSourceRef.current = coordinatesSnapshot ? "coordinates" : null;
 		setFormState(initialFormSnapshot);
 		setSelectedCoordinates(coordinatesSnapshot);
 		setProfileImageFile(null);
