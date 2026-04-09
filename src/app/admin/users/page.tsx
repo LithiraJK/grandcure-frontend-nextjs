@@ -12,6 +12,20 @@ function isAdminRole(role: string | undefined) {
   return (role ?? "").toUpperCase() === "ADMIN";
 }
 
+function resolveRoleRedirect(role: string | undefined) {
+  const normalized = (role ?? "").toUpperCase();
+
+  if (normalized === "CARE_GIVER" || normalized === "CAREGIVER") {
+    return ROUTES.caregiver;
+  }
+
+  if (normalized === "PATIENT") {
+    return ROUTES.patient;
+  }
+
+  return ROUTES.forbidden;
+}
+
 function formatRole(role: string) {
   return role
     .replace(/_/g, " ")
@@ -47,8 +61,13 @@ export default function AdminUsersPage() {
   const [tableError, setTableError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !isAdminRole(role)) {
+    if (!isAuthenticated) {
       router.replace(ROUTES.login);
+      return;
+    }
+
+    if (!isAdminRole(role)) {
+      router.replace(resolveRoleRedirect(role));
       return;
     }
 

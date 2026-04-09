@@ -80,7 +80,7 @@ export default function AdminReviewsPage() {
 
   return (
     <AdminShell
-      activeItem="reviews"
+      activeItem="assignments"
       title="Review Management Activity"
       subtitle="Track assignment lifecycle updates and operational request reviews."
     >

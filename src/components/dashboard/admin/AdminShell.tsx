@@ -5,25 +5,26 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { ROUTES } from "@/lib/routes";
 
 type AdminShellProps = {
   children: ReactNode;
-  activeItem: "dashboard" | "users" | "reviews";
+  activeItem: "dashboard" | "users" | "assignments";
   title: string;
   subtitle: string;
 };
 
 type NavItem = {
-  key: "dashboard" | "users" | "reviews";
+  key: "dashboard" | "users" | "assignments";
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
 };
 
 const navItems: NavItem[] = [
-  { key: "dashboard", label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { key: "users", label: "Users", href: "/admin/users", icon: UsersRound },
-  { key: "reviews", label: "Reviews", href: "/admin/reviews", icon: Star },
+  { key: "dashboard", label: "Dashboard", href: ROUTES.admin, icon: LayoutDashboard },
+  { key: "users", label: "Users", href: ROUTES.adminUsers, icon: UsersRound },
+  { key: "assignments", label: "Assignments", href: ROUTES.adminAssignments, icon: Star },
 ];
 
 export function AdminShell({ children, activeItem, title, subtitle }: AdminShellProps) {

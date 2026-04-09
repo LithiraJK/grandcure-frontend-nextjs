@@ -89,6 +89,14 @@ export function proxy(request: NextRequest) {
     }
 
     if (requiredRole !== sessionRole) {
+      if (pathname.startsWith("/admin")) {
+        if (sessionRole) {
+          return NextResponse.redirect(new URL(resolveRoleHome(sessionRole), request.url));
+        }
+
+        return NextResponse.rewrite(new URL("/403", request.url));
+      }
+
       return NextResponse.rewrite(new URL("/403", request.url));
     }
   }

@@ -16,6 +16,20 @@ function isAdminRole(role: string | undefined) {
   return (role ?? "").toUpperCase() === "ADMIN";
 }
 
+function resolveRoleRedirect(role: string | undefined) {
+  const normalized = (role ?? "").toUpperCase();
+
+  if (normalized === "CARE_GIVER" || normalized === "CAREGIVER") {
+    return ROUTES.caregiver;
+  }
+
+  if (normalized === "PATIENT") {
+    return ROUTES.patient;
+  }
+
+  return ROUTES.forbidden;
+}
+
 function parseUsersPayload(payload: unknown): AdminUser[] {
   if (Array.isArray(payload)) {
     return payload as AdminUser[];
@@ -58,8 +72,13 @@ export default function AdminDashboardPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [assignments, setAssignments] = useState<AdminAssignment[]>([]);
   useEffect(() => {
-    if (!isAuthenticated || !isAdminRole(role)) {
+    if (!isAuthenticated) {
       router.replace(ROUTES.login);
+      return;
+    }
+
+    if (!isAdminRole(role)) {
+      router.replace(resolveRoleRedirect(role));
       return;
     }
 
@@ -129,7 +148,7 @@ export default function AdminDashboardPage() {
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Link
-          href="/admin/users"
+          href={ROUTES.adminUsers}
           className="rounded-3xl border border-[#d8e4ee] bg-white p-6 shadow-soft transition hover:border-primary/25 hover:shadow-md"
         >
           <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Users</p>
@@ -142,15 +161,15 @@ export default function AdminDashboardPage() {
         </Link>
 
         <Link
-          href="/admin/reviews"
+          href={ROUTES.adminAssignments}
           className="rounded-3xl border border-[#d8e4ee] bg-white p-6 shadow-soft transition hover:border-primary/25 hover:shadow-md"
         >
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Reviews</p>
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Assignments</p>
           <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-zinc-900">
-            Review Management Activity
+            Platform Assignments Oversight
           </h2>
           <p className="mt-2 text-sm text-secondary">
-            Inspect assignment workflows and request lifecycle activity from one feed.
+            Inspect care request workflows and lifecycle activity from one feed.
           </p>
         </Link>
       </section>

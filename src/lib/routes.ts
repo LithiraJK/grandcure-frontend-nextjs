@@ -3,6 +3,8 @@ export const ROUTES = {
   forbidden: "/403",
   dashboard: "/dashboard",
   admin: "/admin",
+  adminUsers: "/admin/users",
+  adminAssignments: "/admin/assignments",
   patient: "/patient",
   patientRequest: "/patient/request",
   patientSchedule: "/patient/schedule",

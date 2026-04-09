@@ -12,6 +12,20 @@ function isAdminRole(role: string | undefined) {
   return (role ?? "").toUpperCase() === "ADMIN";
 }
 
+function resolveRoleRedirect(role: string | undefined) {
+  const normalized = (role ?? "").toUpperCase();
+
+  if (normalized === "CARE_GIVER" || normalized === "CAREGIVER") {
+    return ROUTES.caregiver;
+  }
+
+  if (normalized === "PATIENT") {
+    return ROUTES.patient;
+  }
+
+  return ROUTES.forbidden;
+}
+
 function formatDateLabel(value: string) {
   if (!value.trim()) {
     return "-";
@@ -94,7 +108,7 @@ export default function AdminAssignmentsPage() {
     }
 
     if (!isAdminRole(role)) {
-      router.replace(ROUTES.forbidden);
+      router.replace(resolveRoleRedirect(role));
       return;
     }
 
@@ -117,7 +131,7 @@ export default function AdminAssignmentsPage() {
 
   return (
     <AdminShell
-      activeItem="reviews"
+      activeItem="assignments"
       title="Platform Assignments Oversight"
       subtitle="Review all care requests across the platform and monitor lifecycle status by patient, caregiver, and service type."
     >
