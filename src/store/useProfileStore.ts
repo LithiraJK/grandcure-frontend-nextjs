@@ -19,6 +19,11 @@ type ProfileState = {
   profile: ProfileData | null;
   isLoading: boolean;
   fetchProfile: () => Promise<void>;
+  updatePatientProfile: (
+    formData: UpdateProfileFormData,
+    idFile?: File,
+    profileImageFile?: File,
+  ) => Promise<void>;
   updateCaregiverProfile: (
     formData: UpdateProfileFormData,
     idFile?: File,
@@ -114,6 +119,32 @@ export const useProfileStore = create<ProfileState>((set) => ({
     try {
       const response = await apiRequest<ProfileData>("/users/profile", {
         method: "GET",
+      });
+
+      set({ profile: response.data, isLoading: false });
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+
+  updatePatientProfile: async (formData, idFile, profileImageFile) => {
+    set({ isLoading: true });
+
+    try {
+      const documents = await uploadDocuments(idFile, undefined, profileImageFile);
+
+      const rawPayload: Record<string, unknown> = {
+        ...formData,
+        ...(documents.idDocumentUrl ? { idDocumentUrl: documents.idDocumentUrl } : {}),
+        ...(documents.profileImageUrl ? { profileImageUrl: documents.profileImageUrl } : {}),
+      };
+
+      const payload = sanitizePatchPayload(rawPayload);
+
+      const response = await apiRequest<ProfileData>("/users/profile", {
+        method: "PATCH",
+        body: payload,
       });
 
       set({ profile: response.data, isLoading: false });

@@ -1,9 +1,8 @@
 "use client";
 
-import { Loader2, MapPin, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { getCoordinates } from "@/utils/geolocation";
 import {
   type CreateAssignmentRequestPayload,
   useAssignmentStore,
@@ -13,8 +12,6 @@ type Coordinates = {
   latitude: number;
   longitude: number;
 };
-
-type LocationMode = "profile" | "different";
 
 type RequestCareModalProps = {
   isOpen: boolean;
@@ -27,13 +24,15 @@ export function RequestCareModal({
   isOpen,
   onClose,
   profileAddress,
-  profileCoordinates,
+  profileCoordinates: _profileCoordinates,
 }: RequestCareModalProps) {
   const createRequest = useAssignmentStore((state) => state.createRequest);
   const [requestType, setRequestType] = useState<CreateAssignmentRequestPayload["type"]>("NORMAL");
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
-  const [locationMode, setLocationMode] = useState<LocationMode>("profile");
-  const [differentAddress, setDifferentAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -42,15 +41,26 @@ export function RequestCareModal({
     [profileAddress],
   );
 
+  const today = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }, []);
+
   if (!isOpen) {
     return null;
   }
 
   const resetForm = () => {
     setRequestType("NORMAL");
+    setDate("");
+    setStartTime("");
+    setEndTime("");
+    setLocation(resolvedProfileAddress);
     setNotes("");
-    setLocationMode("profile");
-    setDifferentAddress("");
     setFormError(null);
   };
 
@@ -67,6 +77,27 @@ export function RequestCareModal({
     event.preventDefault();
     setFormError(null);
 
+    if (!date) {
+      setFormError("Please select a date.");
+      return;
+    }
+
+    if (!startTime || !endTime) {
+      setFormError("Please select start and end times.");
+      return;
+    }
+
+    if (startTime >= endTime) {
+      setFormError("End time must be later than start time.");
+      return;
+    }
+
+    const trimmedLocation = location.trim();
+    if (!trimmedLocation) {
+      setFormError("Please enter a location.");
+      return;
+    }
+
     const trimmedNotes = notes.trim();
     if (!trimmedNotes) {
       setFormError("Please enter request notes.");
@@ -76,40 +107,13 @@ export function RequestCareModal({
     setIsSubmitting(true);
 
     try {
-      let finalAddress = "";
-      let finalCoordinates: Coordinates | null = null;
-
-      if (locationMode === "profile") {
-        if (!resolvedProfileAddress) {
-          setFormError("Profile address is not available. Please use a different location.");
-          return;
-        }
-
-        finalAddress = resolvedProfileAddress;
-        finalCoordinates = profileCoordinates ?? (await getCoordinates(resolvedProfileAddress));
-      } else {
-        const trimmedAddress = differentAddress.trim();
-
-        if (!trimmedAddress) {
-          setFormError("Please enter a location.");
-          return;
-        }
-
-        finalAddress = trimmedAddress;
-        finalCoordinates = await getCoordinates(trimmedAddress);
-      }
-
-      if (!finalCoordinates) {
-        setFormError("Unable to resolve location coordinates. Please try another address.");
-        return;
-      }
-
       await createRequest({
         type: requestType,
+        date,
+        startTime,
+        endTime,
+        location: trimmedLocation,
         notes: trimmedNotes,
-        latitude: finalCoordinates.latitude,
-        longitude: finalCoordinates.longitude,
-        address: finalAddress,
       });
 
       resetForm();
@@ -139,7 +143,7 @@ export function RequestCareModal({
               Request Care
             </h2>
             <p className="mt-2 text-sm text-secondary">
-              Select service type, add notes, and confirm your pickup location.
+              Fill appointment date/time, location, and notes to submit your request.
             </p>
           </div>
 
@@ -169,6 +173,62 @@ export function RequestCareModal({
             </select>
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2 sm:col-span-3">
+              <label htmlFor="request-date" className="text-sm font-semibold text-zinc-800">
+                Date
+              </label>
+              <input
+                id="request-date"
+                type="date"
+                min={today}
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+                className="h-11 w-full rounded-2xl bg-[#f3f8fc] px-4 text-sm text-zinc-900 outline-none transition focus:bg-white"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="request-start-time" className="text-sm font-semibold text-zinc-800">
+                Start Time
+              </label>
+              <input
+                id="request-start-time"
+                type="time"
+                value={startTime}
+                onChange={(event) => setStartTime(event.target.value)}
+                className="h-11 w-full rounded-2xl bg-[#f3f8fc] px-4 text-sm text-zinc-900 outline-none transition focus:bg-white"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="request-end-time" className="text-sm font-semibold text-zinc-800">
+                End Time
+              </label>
+              <input
+                id="request-end-time"
+                type="time"
+                value={endTime}
+                onChange={(event) => setEndTime(event.target.value)}
+                className="h-11 w-full rounded-2xl bg-[#f3f8fc] px-4 text-sm text-zinc-900 outline-none transition focus:bg-white"
+              />
+            </div>
+
+            <div className="space-y-2 sm:col-span-3">
+              <label htmlFor="request-location" className="text-sm font-semibold text-zinc-800">
+                Location
+              </label>
+              <input
+                id="request-location"
+                type="text"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                placeholder={resolvedProfileAddress || "Enter location (e.g. Colombo 05)"}
+                className="h-11 w-full rounded-2xl bg-[#f3f8fc] px-4 text-sm text-zinc-900 outline-none transition placeholder:text-secondary focus:bg-white"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label htmlFor="request-notes" className="text-sm font-semibold text-zinc-800">
               Notes
@@ -181,58 +241,6 @@ export function RequestCareModal({
               placeholder="Describe the care you need..."
               className="w-full rounded-2xl bg-[#f3f8fc] px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-secondary focus:bg-white"
             />
-          </div>
-
-          <div className="space-y-3 rounded-2xl bg-[#edf4fa] p-4">
-            <p className="text-sm font-semibold text-zinc-900">Location</p>
-
-            <div className="inline-flex flex-wrap gap-2 rounded-2xl bg-white/80 p-1.5">
-              <button
-                type="button"
-                onClick={() => setLocationMode("profile")}
-                className={[
-                  "rounded-xl px-3 py-2 text-xs font-semibold transition",
-                  locationMode === "profile"
-                    ? "bg-white text-primary shadow-sm"
-                    : "text-secondary hover:text-zinc-900",
-                ].join(" ")}
-              >
-                Use My Profile Address
-              </button>
-              <button
-                type="button"
-                onClick={() => setLocationMode("different")}
-                className={[
-                  "rounded-xl px-3 py-2 text-xs font-semibold transition",
-                  locationMode === "different"
-                    ? "bg-white text-primary shadow-sm"
-                    : "text-secondary hover:text-zinc-900",
-                ].join(" ")}
-              >
-                Enter Different Location
-              </button>
-            </div>
-
-            {locationMode === "profile" ? (
-              <div className="inline-flex min-h-11 w-full items-center gap-2 rounded-2xl bg-white px-4 text-sm text-zinc-800">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span>{resolvedProfileAddress || "No profile address found"}</span>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <label htmlFor="different-address" className="text-xs font-semibold text-secondary">
-                  Address
-                </label>
-                <input
-                  id="different-address"
-                  type="text"
-                  value={differentAddress}
-                  onChange={(event) => setDifferentAddress(event.target.value)}
-                  placeholder="Enter pickup location"
-                  className="h-11 w-full rounded-2xl bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-secondary"
-                />
-              </div>
-            )}
           </div>
 
           {formError ? (

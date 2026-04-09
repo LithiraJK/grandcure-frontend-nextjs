@@ -13,10 +13,11 @@ export type AssignmentStatus =
 
 export type CreateAssignmentRequestPayload = {
   type: "NORMAL" | "URGENT";
+  date: string;
+  startTime: string;
+  endTime: string;
+  location: string;
   notes: string;
-  latitude: number;
-  longitude: number;
-  address: string;
 };
 
 export type Assignment = {
@@ -210,6 +211,21 @@ function normalizeAssignmentList(payload: unknown): Assignment[] {
   return rawList.map(normalizeAssignment);
 }
 
+function extractRequestError(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const message = (error.response?.data as { message?: string } | undefined)?.message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return "Failed to create care request.";
+}
+
 function deriveActiveAssignments(
   pendingAssignments: Assignment[],
   historyAssignments: Assignment[],
@@ -315,8 +331,10 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
       emitToast("Care request created successfully.", "success");
       await get().fetchPatientAssignments();
     } catch (error) {
-      emitToast("Failed to create care request.", "error");
+      const message = extractRequestError(error);
+      emitToast(message, "error");
       console.error(error);
+      throw new Error(message);
     } finally {
       set({ isLoading: false });
     }

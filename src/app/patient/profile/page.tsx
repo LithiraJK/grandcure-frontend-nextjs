@@ -148,7 +148,7 @@ export default function PatientProfilePage() {
 	const profile = useProfileStore((state) => state.profile);
 	const isLoading = useProfileStore((state) => state.isLoading);
 	const fetchProfile = useProfileStore((state) => state.fetchProfile);
-	const updateCaregiverProfile = useProfileStore((state) => state.updateCaregiverProfile);
+	const updatePatientProfile = useProfileStore((state) => state.updatePatientProfile);
 
 	const [formState, setFormState] = useState<FormState>(initialFormState);
 	const [initialFormSnapshot, setInitialFormSnapshot] = useState<FormState>(initialFormState);
@@ -507,22 +507,13 @@ export default function PatientProfilePage() {
 		}
 
 		try {
-			const fallbackCoordinates = selectedCoordinates ?? (await geocodeAddressCoordinates(trimmedForm.address));
-
-			await updateCaregiverProfile(
+			await updatePatientProfile(
 				{
 					phoneNumber: normalizedPhoneNumber,
 					dateOfBirth: trimmedForm.dateOfBirth,
 					address: trimmedForm.address,
-					...(fallbackCoordinates
-						? {
-								latitude: fallbackCoordinates.latitude,
-								longitude: fallbackCoordinates.longitude,
-							}
-						: {}),
 				},
 				idFile ?? undefined,
-				undefined,
 				profileImageFile ?? undefined,
 			);
 
@@ -533,8 +524,8 @@ export default function PatientProfilePage() {
 				address: trimmedForm.address,
 			});
 			setProfileImageSnapshot({ url: profileImageUrl });
-			setCoordinatesSnapshot(fallbackCoordinates);
-			setSelectedCoordinates(fallbackCoordinates);
+			setCoordinatesSnapshot(selectedCoordinates);
+			setSelectedCoordinates(selectedCoordinates);
 			setProfileImageFile(null);
 			setProfileImagePreviewUrl((previous) => {
 				if (previous) {
