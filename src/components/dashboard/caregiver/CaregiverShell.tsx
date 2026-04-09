@@ -19,7 +19,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 type CaregiverShellProps = {
   children: ReactNode;
-  activeItem: "dashboard" | "requests" | "profile";
+  activeItem: "dashboard" | "requests" | "schedule" | "profile";
   pageSubtitle?: string;
 };
 
@@ -33,7 +33,7 @@ type NavItem = {
 const primaryNavItems: NavItem[] = [
   { key: "dashboard", label: "Dashboard", href: ROUTES.caregiver, icon: LayoutDashboard },
   { key: "requests", label: "Requests", href: ROUTES.caregiverRequests, icon: ClipboardList },
-  { key: "schedule", label: "Schedule", icon: ClipboardList },
+  { key: "schedule", label: "Schedule", href: ROUTES.caregiverSchedule, icon: ClipboardList },
   { key: "profile", label: "Profile", href: ROUTES.caregiverProfile, icon: User },
   { key: "escalation", label: "Admin Escalation", icon: CircleHelp },
 ];
