@@ -1,7 +1,6 @@
 import { create } from "zustand";
 
 import { apiRequest } from "@/lib/apiClient";
-import { getCoordinates } from "@/utils/geolocation";
 
 type ProfileData = Record<string, unknown>;
 const AUTH_TOKEN_STORAGE_KEY = "gc_access_token";
@@ -129,19 +128,12 @@ export const useProfileStore = create<ProfileState>((set) => ({
 
     try {
       const documents = await uploadDocuments(idFile, certFile, profileImageFile);
-      const coordinates = await getCoordinates(formData.address);
 
       const rawPayload: Record<string, unknown> = {
         ...formData,
         ...(documents.idDocumentUrl ? { idDocumentUrl: documents.idDocumentUrl } : {}),
         ...(documents.certDocumentUrl ? { certDocumentUrl: documents.certDocumentUrl } : {}),
         ...(documents.profileImageUrl ? { profileImageUrl: documents.profileImageUrl } : {}),
-        ...(coordinates
-          ? {
-              latitude: coordinates.latitude,
-              longitude: coordinates.longitude,
-            }
-          : {}),
       };
 
       const payload = sanitizePatchPayload(rawPayload);

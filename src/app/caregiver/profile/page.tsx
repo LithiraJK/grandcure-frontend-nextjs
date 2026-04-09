@@ -7,6 +7,7 @@ import { CaregiverShell } from "@/components/dashboard/caregiver/CaregiverShell"
 import { ROUTES } from "@/lib/routes";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
+import { geocodeAddressCoordinates, getCurrentCoordinates, reverseGeocodeAddress } from "@/utils/geolocation";
 
 type FormState = {
   phoneNumber: string;
@@ -18,6 +19,11 @@ type FormState = {
 
 type PersistedProfileImage = {
   url: string | null;
+};
+
+type Coordinates = {
+  latitude: number;
+  longitude: number;
 };
 
 type ToastState = {
@@ -99,6 +105,18 @@ function countDigits(value: string) {
   return value.replace(/\D/g, "").length;
 }
 
+function normalizePhoneNumber(value: string) {
+  const trimmed = value.trim();
+  const hasPlusPrefix = trimmed.startsWith("+");
+  const digits = value.replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  return `${hasPlusPrefix ? "+" : ""}${digits}`;
+}
+
 function isFutureDate(value: string) {
   if (!value) {
     return false;
@@ -155,6 +173,9 @@ export default function CaregiverProfileUpdatePage() {
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string | null>(null);
+  const [coordinatesSnapshot, setCoordinatesSnapshot] = useState<Coordinates | null>(null);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<Coordinates | null>(null);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
   const [activeDropZone, setActiveDropZone] = useState<"avatar" | "id" | "cert" | null>(null);
@@ -206,11 +227,17 @@ export default function CaregiverProfileUpdatePage() {
       hourlyRate: toNumberText(source.hourlyRate),
     };
     const nextProfileImageUrl = getProfileImageUrl(source);
+    const nextCoordinates =
+      typeof source.latitude === "number" && typeof source.longitude === "number"
+        ? { latitude: source.latitude, longitude: source.longitude }
+        : null;
 
     setFormState(nextFormState);
     setInitialFormSnapshot(nextFormState);
     setProfileImageUrl(nextProfileImageUrl);
     setProfileImageSnapshot({ url: nextProfileImageUrl });
+    setCoordinatesSnapshot(nextCoordinates);
+    setSelectedCoordinates(nextCoordinates);
     setProfileImageFile(null);
     setProfileImagePreviewUrl((previous) => {
       if (previous) {
@@ -280,6 +307,15 @@ export default function CaregiverProfileUpdatePage() {
   }, [trimmedForm.hourlyRate]);
 
   const isPhoneValid = useMemo(() => countDigits(trimmedForm.phoneNumber) >= 10, [trimmedForm.phoneNumber]);
+  const normalizedPhoneNumber = useMemo(
+    () => normalizePhoneNumber(trimmedForm.phoneNumber),
+    [trimmedForm.phoneNumber],
+  );
+
+  const isPhoneRegexValid = useMemo(
+    () => /^\+?[0-9]{7,15}$/.test(normalizedPhoneNumber),
+    [normalizedPhoneNumber],
+  );
 
   const isDateOfBirthValid = useMemo(
     () => Boolean(trimmedForm.dateOfBirth) && !isFutureDate(trimmedForm.dateOfBirth),
@@ -291,6 +327,7 @@ export default function CaregiverProfileUpdatePage() {
       Boolean(
         trimmedForm.phoneNumber &&
           isPhoneValid &&
+          isPhoneRegexValid &&
           isDateOfBirthValid &&
           trimmedForm.address &&
           trimmedForm.designation &&
@@ -300,6 +337,7 @@ export default function CaregiverProfileUpdatePage() {
       isDateOfBirthValid,
       isHourlyRateValid,
       isPhoneValid,
+      isPhoneRegexValid,
       trimmedForm.address,
       trimmedForm.designation,
       trimmedForm.phoneNumber,
@@ -313,11 +351,25 @@ export default function CaregiverProfileUpdatePage() {
       trimmedForm.address !== trimmedInitialForm.address ||
       trimmedForm.designation !== trimmedInitialForm.designation ||
       trimmedForm.hourlyRate !== trimmedInitialForm.hourlyRate ||
+      selectedCoordinates?.latitude !== coordinatesSnapshot?.latitude ||
+      selectedCoordinates?.longitude !== coordinatesSnapshot?.longitude ||
       profileImageUrl !== profileImageSnapshot.url ||
       Boolean(profileImageFile) ||
       Boolean(idFile) ||
       Boolean(certFile),
-    [certFile, idFile, profileImageFile, profileImageSnapshot.url, profileImageUrl, trimmedForm, trimmedInitialForm],
+    [
+      certFile,
+      coordinatesSnapshot?.latitude,
+      coordinatesSnapshot?.longitude,
+      idFile,
+      profileImageFile,
+      profileImageSnapshot.url,
+      profileImageUrl,
+      selectedCoordinates?.latitude,
+      selectedCoordinates?.longitude,
+      trimmedForm,
+      trimmedInitialForm,
+    ],
   );
 
   useEffect(() => {
@@ -384,6 +436,35 @@ export default function CaregiverProfileUpdatePage() {
   const onFieldChange = (key: keyof FormState) => (event: ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setFormState((previous) => ({ ...previous, [key]: value }));
+
+    if (key === "address") {
+      setSelectedCoordinates(null);
+    }
+  };
+
+  const handleUseCurrentLocation = async () => {
+    setIsResolvingLocation(true);
+
+    try {
+      const coordinates = await getCurrentCoordinates();
+
+      if (!coordinates) {
+        setToast({ message: "Unable to access current location.", tone: "error" });
+        return;
+      }
+
+      setSelectedCoordinates(coordinates);
+
+      const resolvedAddress = await reverseGeocodeAddress(coordinates.latitude, coordinates.longitude);
+
+      if (resolvedAddress) {
+        setFormState((previous) => ({ ...previous, address: resolvedAddress }));
+      }
+
+      setToast({ message: "Current location applied.", tone: "success" });
+    } finally {
+      setIsResolvingLocation(false);
+    }
   };
 
   const applySelectedFile = (file: File | null, setter: (value: File | null) => void) => {
@@ -501,10 +582,19 @@ export default function CaregiverProfileUpdatePage() {
     }
 
     try {
+      const fallbackCoordinates = selectedCoordinates ?? (await geocodeAddressCoordinates(trimmedForm.address));
+
       await updateCaregiverProfile(
         {
           ...trimmedForm,
+          phoneNumber: normalizedPhoneNumber,
           hourlyRate: Number(trimmedForm.hourlyRate),
+          ...(fallbackCoordinates
+            ? {
+                latitude: fallbackCoordinates.latitude,
+                longitude: fallbackCoordinates.longitude,
+              }
+            : {}),
         },
         idFile ?? undefined,
         certFile ?? undefined,
@@ -520,6 +610,8 @@ export default function CaregiverProfileUpdatePage() {
         hourlyRate: trimmedForm.hourlyRate,
       });
       setProfileImageSnapshot({ url: profileImageUrl });
+      setCoordinatesSnapshot(fallbackCoordinates);
+      setSelectedCoordinates(fallbackCoordinates);
       setProfileImageFile(null);
       setProfileImagePreviewUrl((previous) => {
         if (previous) {
@@ -538,6 +630,7 @@ export default function CaregiverProfileUpdatePage() {
 
   const handleResetChanges = () => {
     setFormState(initialFormSnapshot);
+    setSelectedCoordinates(coordinatesSnapshot);
     setProfileImageFile(null);
     setProfileImageUrl(profileImageSnapshot.url);
     setProfileImagePreviewUrl((previous) => {
@@ -638,11 +731,11 @@ export default function CaregiverProfileUpdatePage() {
                   value={formState.phoneNumber}
                   onChange={onFieldChange("phoneNumber")}
                   required
-                  placeholder="+1 555 000 0000"
+                  placeholder="Your Contact Number"
                   className="h-12 w-full rounded-xl bg-[#f7f9fc] px-4 text-sm text-[#191c1e] outline-none ring-1 ring-gray-300/15 transition focus:ring-2 focus:ring-[#8ec7e8]"
                 />
-                {!isPhoneValid && formState.phoneNumber.trim() ? (
-                  <p className="text-xs font-medium text-[#9b2f2f]">Enter a valid phone number (at least 10 digits).</p>
+                {(!isPhoneValid || !isPhoneRegexValid) && formState.phoneNumber.trim() ? (
+                  <p className="text-xs font-medium text-[#9b2f2f]">Enter a valid phone number format (e.g., +94771234567).</p>
                 ) : null}
               </label>
 
@@ -662,14 +755,31 @@ export default function CaregiverProfileUpdatePage() {
 
               <label className="space-y-1.5 sm:col-span-2">
                 <span className="text-xs font-semibold uppercase tracking-wide text-[#4e5960]">Address</span>
+                <div className="mb-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleUseCurrentLocation();
+                    }}
+                    disabled={isResolvingLocation}
+                    className="inline-flex h-9 items-center justify-center rounded-full bg-[#eef4fa] px-4 text-xs font-semibold text-[#2f4f64] transition hover:bg-[#e4edf6] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isResolvingLocation ? "Locating..." : "Current Location"}
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={formState.address}
                   onChange={onFieldChange("address")}
                   required
-                  placeholder="Street, City, State"
+                  placeholder="City / District / Province"
                   className="h-12 w-full rounded-xl bg-[#f7f9fc] px-4 text-sm text-[#191c1e] outline-none ring-1 ring-gray-300/15 transition focus:ring-2 focus:ring-[#8ec7e8]"
                 />
+                {selectedCoordinates ? (
+                  <p className="mt-2 text-xs text-[#5f6a71]">
+                    Coordinates: {selectedCoordinates.latitude.toFixed(6)}, {selectedCoordinates.longitude.toFixed(6)}
+                  </p>
+                ) : null}
               </label>
 
               <label className="space-y-1.5">
@@ -685,7 +795,7 @@ export default function CaregiverProfileUpdatePage() {
               </label>
 
               <label className="space-y-1.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-[#4e5960]">Hourly Rate</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[#4e5960]">Hourly Rate (LKR)</span>
                 <input
                   type="number"
                   min="0"
@@ -726,7 +836,7 @@ export default function CaregiverProfileUpdatePage() {
                 }}
                 onDrop={onDropFile("id", setIdFile)}
               >
-                <span className="text-sm font-semibold text-[#191c1e]">Driver&apos;s License</span>
+                <span className="text-sm font-semibold text-[#191c1e]">NIC</span>
                 <p className="mt-1 text-xs text-[#4e5960]">Identity document for verification. Click or drag and drop.</p>
                 <span className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#191c1e] ring-1 ring-gray-300/15">
                   Choose Image
