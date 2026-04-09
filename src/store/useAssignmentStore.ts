@@ -8,7 +8,16 @@ export type AssignmentStatus =
   | "ACCEPTED"
   | "IN_PROGRESS"
   | "COMPLETED"
+  | "CANCELLED"
   | "REJECTED";
+
+export type CreateAssignmentRequestPayload = {
+  type: "NORMAL" | "URGENT";
+  notes: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+};
 
 export type Assignment = {
   id: string;
@@ -29,9 +38,13 @@ type AssignmentState = {
   pendingAssignments: Assignment[];
   activeAssignments: Assignment[];
   historyAssignments: Assignment[];
+  patientAssignments: Assignment[];
   isLoading: boolean;
   fetchPending: () => Promise<void>;
   fetchCaregiverHistory: () => Promise<void>;
+  fetchPatientAssignments: () => Promise<void>;
+  createRequest: (payload: CreateAssignmentRequestPayload) => Promise<void>;
+  cancelAssignment: (assignmentId: string) => Promise<void>;
   acceptAssignment: (assignmentId: string) => Promise<void>;
   startAssignment: (assignmentId: string) => Promise<void>;
   completeAssignment: (assignmentId: string) => Promise<void>;
@@ -141,6 +154,10 @@ function normalizeStatus(value: unknown): AssignmentStatus {
     return "COMPLETED";
   }
 
+  if (normalized === "CANCELLED") {
+    return "CANCELLED";
+  }
+
   if (normalized === "REJECTED") {
     return "REJECTED";
   }
@@ -212,6 +229,7 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
   pendingAssignments: [],
   activeAssignments: [],
   historyAssignments: [],
+  patientAssignments: [],
   isLoading: false,
 
   fetchPending: async () => {
@@ -257,6 +275,67 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
       });
     } catch (error) {
       emitToast("Failed to load assignment history.", "error");
+      console.error(error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchPatientAssignments: async () => {
+    set({ isLoading: true });
+
+    try {
+      const response = await axios.get(
+        `${BACKEND_BASE_URL}/assignments/history/patient`,
+        {
+          headers: getAuthHeaders(),
+        },
+      );
+
+      const patientAssignments = normalizeAssignmentList(response.data);
+      set({ patientAssignments });
+    } catch (error) {
+      emitToast("Failed to load patient assignments.", "error");
+      console.error(error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  createRequest: async (payload) => {
+    set({ isLoading: true });
+
+    try {
+      await axios.post(
+        `${BACKEND_BASE_URL}/assignments/request`,
+        payload,
+        { headers: getAuthHeaders() },
+      );
+
+      emitToast("Care request created successfully.", "success");
+      await get().fetchPatientAssignments();
+    } catch (error) {
+      emitToast("Failed to create care request.", "error");
+      console.error(error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  cancelAssignment: async (assignmentId) => {
+    set({ isLoading: true });
+
+    try {
+      await axios.patch(
+        `${BACKEND_BASE_URL}/assignments/${assignmentId}/cancel`,
+        {},
+        { headers: getAuthHeaders() },
+      );
+
+      emitToast("Assignment cancelled successfully.", "success");
+      await get().fetchPatientAssignments();
+    } catch (error) {
+      emitToast("Failed to cancel assignment.", "error");
       console.error(error);
     } finally {
       set({ isLoading: false });
