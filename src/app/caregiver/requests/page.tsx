@@ -12,7 +12,7 @@ import {
 	UserRound,
 	X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { CaregiverShell } from "@/components/dashboard/caregiver/CaregiverShell";
@@ -24,6 +24,23 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 type RequestTab = "pending" | "active" | "history";
 type PriorityFilter = "ALL" | "URGENT" | "STANDARD" | "RECURRING";
+type SortOption = "NEWEST" | "FEE_HIGH" | "DISTANCE_LOW" | "PATIENT_AZ";
+
+const REQUEST_TABS: RequestTab[] = ["pending", "active", "history"];
+const PRIORITY_FILTERS: PriorityFilter[] = ["ALL", "URGENT", "STANDARD", "RECURRING"];
+const SORT_OPTIONS: SortOption[] = ["NEWEST", "FEE_HIGH", "DISTANCE_LOW", "PATIENT_AZ"];
+
+function isRequestTab(value: string | null): value is RequestTab {
+	return REQUEST_TABS.includes((value ?? "") as RequestTab);
+}
+
+function isPriorityFilter(value: string | null): value is PriorityFilter {
+	return PRIORITY_FILTERS.includes((value ?? "") as PriorityFilter);
+}
+
+function isSortOption(value: string | null): value is SortOption {
+	return SORT_OPTIONS.includes((value ?? "") as SortOption);
+}
 
 function isCaregiverRole(role: string | undefined) {
 	if (!role) {
@@ -121,9 +138,22 @@ function AssignmentTimelineCard({
 
 export default function CaregiverRequestsPage() {
 	const router = useRouter();
-	const [activeTab, setActiveTab] = useState<RequestTab>("pending");
-	const [searchQuery, setSearchQuery] = useState("");
-	const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("ALL");
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const initialTab = searchParams.get("tab");
+	const initialQuery = searchParams.get("q") ?? "";
+	const initialPriority = searchParams.get("priority");
+	const initialSort = searchParams.get("sort");
+	const [activeTab, setActiveTab] = useState<RequestTab>(
+		isRequestTab(initialTab) ? initialTab : "pending",
+	);
+	const [searchQuery, setSearchQuery] = useState(initialQuery);
+	const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>(
+		isPriorityFilter(initialPriority) ? initialPriority : "ALL",
+	);
+	const [sortOption, setSortOption] = useState<SortOption>(
+		isSortOption(initialSort) ? initialSort : "NEWEST",
+	);
 	const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
 
 	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -148,6 +178,60 @@ export default function CaregiverRequestsPage() {
 	useEffect(() => {
 		void Promise.all([fetchPending(), fetchCaregiverHistory()]);
 	}, [fetchCaregiverHistory, fetchPending]);
+
+	useEffect(() => {
+		const tabValue = searchParams.get("tab");
+		const queryValue = searchParams.get("q") ?? "";
+		const priorityValue = searchParams.get("priority");
+		const sortValue = searchParams.get("sort");
+
+		if (isRequestTab(tabValue) && tabValue !== activeTab) {
+			setActiveTab(tabValue);
+		}
+
+		if (queryValue !== searchQuery) {
+			setSearchQuery(queryValue);
+		}
+
+		if (isPriorityFilter(priorityValue) && priorityValue !== priorityFilter) {
+			setPriorityFilter(priorityValue);
+		}
+
+		if (isSortOption(sortValue) && sortValue !== sortOption) {
+			setSortOption(sortValue);
+		}
+	}, [activeTab, priorityFilter, searchParams, searchQuery, sortOption]);
+
+	useEffect(() => {
+		const nextParams = new URLSearchParams(searchParams.toString());
+		nextParams.set("tab", activeTab);
+
+		if (searchQuery.trim()) {
+			nextParams.set("q", searchQuery.trim());
+		} else {
+			nextParams.delete("q");
+		}
+
+		if (priorityFilter !== "ALL") {
+			nextParams.set("priority", priorityFilter);
+		} else {
+			nextParams.delete("priority");
+		}
+
+		if (sortOption !== "NEWEST") {
+			nextParams.set("sort", sortOption);
+		} else {
+			nextParams.delete("sort");
+		}
+
+		const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+		const nextQuery = nextParams.toString();
+		const nextUrl = `${pathname}${nextQuery ? `?${nextQuery}` : ""}`;
+
+		if (nextUrl !== currentUrl) {
+			router.replace(nextUrl, { scroll: false });
+		}
+	}, [activeTab, pathname, priorityFilter, router, searchParams, searchQuery, sortOption]);
 
 	const activeList = useMemo(() => {
 		if (activeTab === "pending") {
@@ -186,6 +270,28 @@ export default function CaregiverRequestsPage() {
 		});
 	}, [activeList, priorityFilter, searchQuery]);
 
+	const sortedAssignments = useMemo(() => {
+		const nextAssignments = [...filteredAssignments];
+
+		nextAssignments.sort((left, right) => {
+			if (sortOption === "FEE_HIGH") {
+				return right.fee - left.fee;
+			}
+
+			if (sortOption === "DISTANCE_LOW") {
+				return left.distanceMiles - right.distanceMiles;
+			}
+
+			if (sortOption === "PATIENT_AZ") {
+				return left.patientName.localeCompare(right.patientName);
+			}
+
+			return right.id.localeCompare(left.id);
+		});
+
+		return nextAssignments;
+	}, [filteredAssignments, sortOption]);
+
 	const selectedAssignment = useMemo(() => {
 		if (!selectedAssignmentId) {
 			return null;
@@ -198,6 +304,9 @@ export default function CaregiverRequestsPage() {
 			null
 		);
 	}, [activeAssignments, historyAssignments, pendingAssignments, selectedAssignmentId]);
+
+	const hasActiveFilters =
+		searchQuery.trim().length > 0 || priorityFilter !== "ALL" || sortOption !== "NEWEST";
 
 	useEffect(() => {
 		if (!selectedAssignment) {
@@ -268,7 +377,7 @@ export default function CaregiverRequestsPage() {
 					</label>
 
 					<div className="inline-flex flex-wrap items-center gap-1.5 rounded-2xl bg-[#eef5fb] p-1.5">
-						{(["ALL", "URGENT", "STANDARD", "RECURRING"] as const).map((option) => (
+						{PRIORITY_FILTERS.map((option) => (
 							<button
 								key={option}
 								type="button"
@@ -283,6 +392,65 @@ export default function CaregiverRequestsPage() {
 								{option}
 							</button>
 						))}
+					</div>
+
+					<div className="flex flex-wrap items-center justify-end gap-2 md:col-span-2">
+						<label className="inline-flex items-center gap-2 rounded-2xl border border-[#d9e7f2] bg-[#f6fafd] px-3 py-2 text-xs font-semibold text-secondary">
+							<span>Sort</span>
+							<select
+								value={sortOption}
+								onChange={(event) => setSortOption(event.target.value as SortOption)}
+								className="rounded-lg border border-[#d9e7f2] bg-white px-2 py-1 text-xs font-semibold text-zinc-800 outline-none focus:border-[#8ec7e8]"
+							>
+								<option value="NEWEST">Newest</option>
+								<option value="FEE_HIGH">Highest Fee</option>
+								<option value="DISTANCE_LOW">Nearest</option>
+								<option value="PATIENT_AZ">Patient A-Z</option>
+							</select>
+						</label>
+
+						<button
+							type="button"
+							onClick={() => {
+								setSearchQuery("");
+								setPriorityFilter("ALL");
+								setSortOption("NEWEST");
+								setSelectedAssignmentId(null);
+							}}
+							className="inline-flex h-9 items-center rounded-full border border-[#d9e7f2] bg-white px-4 text-xs font-semibold text-secondary transition hover:bg-[#f5f9fc]"
+						>
+							Reset Filters
+						</button>
+					</div>
+				</div>
+
+				<div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#d8e4ee] bg-white px-4 py-3 text-xs text-secondary shadow-soft">
+					<p>
+						Showing <span className="font-bold text-zinc-900">{sortedAssignments.length}</span> of {activeList.length} {activeTab} assignments
+					</p>
+					<div className="flex flex-wrap items-center gap-1.5">
+						{searchQuery.trim() ? (
+							<span className="rounded-full bg-[#edf4fa] px-2.5 py-1 font-semibold text-primary">Search: {searchQuery.trim()}</span>
+						) : null}
+						{priorityFilter !== "ALL" ? (
+							<span className="rounded-full bg-[#edf4fa] px-2.5 py-1 font-semibold text-primary">Priority: {priorityFilter}</span>
+						) : null}
+						{sortOption !== "NEWEST" ? (
+							<span className="rounded-full bg-[#edf4fa] px-2.5 py-1 font-semibold text-primary">Sort: {sortOption.replace("_", " ")}</span>
+						) : null}
+						{hasActiveFilters ? (
+							<button
+								type="button"
+								onClick={() => {
+									setSearchQuery("");
+									setPriorityFilter("ALL");
+									setSortOption("NEWEST");
+								}}
+								className="rounded-full border border-[#d9e7f2] bg-white px-2.5 py-1 font-semibold text-secondary transition hover:bg-[#f5f9fc]"
+							>
+								Clear
+							</button>
+						) : null}
 					</div>
 				</div>
 
@@ -324,14 +492,14 @@ export default function CaregiverRequestsPage() {
 						<Loader2 className="h-4 w-4 animate-spin" />
 						Loading assignments...
 					</div>
-				) : filteredAssignments.length === 0 ? (
+				) : sortedAssignments.length === 0 ? (
 					<div className="rounded-3xl border border-[#d8e4ee] bg-white p-6 text-sm text-secondary shadow-soft">
 						No {activeTab} assignments match your current filters.
 					</div>
 				) : (
 					<div className="space-y-4">
 						{activeTab === "pending"
-							? filteredAssignments.map((assignment) =>
+							? sortedAssignments.map((assignment) =>
 									assignment.priority === "URGENT" ? (
 										<div key={assignment.id} className="space-y-2">
 											<UrgentRequestCard assignment={assignment} />
@@ -353,7 +521,7 @@ export default function CaregiverRequestsPage() {
 										/>
 									),
 								)
-							: filteredAssignments.map((assignment) => (
+							: sortedAssignments.map((assignment) => (
 									<AssignmentTimelineCard
 										key={assignment.id}
 										assignment={assignment}
