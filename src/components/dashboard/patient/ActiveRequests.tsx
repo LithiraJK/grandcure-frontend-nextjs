@@ -86,7 +86,7 @@ export function ActiveRequests() {
             return (
               <article
                 key={assignment.id}
-                className="rounded-3xl bg-white/90 p-5 shadow-soft sm:p-6"
+                className="rounded-3xl bg-white/90 p-5 shadow-soft sm:p-6 drop-shadow-xl"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>

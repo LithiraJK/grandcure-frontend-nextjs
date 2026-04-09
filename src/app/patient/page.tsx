@@ -29,6 +29,29 @@ export default function PatientDashboardPage() {
     [patientAssignments],
   );
 
+  const welcomeName = useMemo(() => {
+    if (!authUser) {
+      return "there";
+    }
+
+    const rawUser = authUser as Record<string, unknown>;
+    const nameCandidate = typeof rawUser.name === "string" ? rawUser.name.trim() : "";
+
+    if (nameCandidate) {
+      return nameCandidate;
+    }
+
+    const emailCandidate = typeof rawUser.email === "string" ? rawUser.email.trim() : "";
+
+    if (!emailCandidate) {
+      return "there";
+    }
+
+    const [localPart] = emailCandidate.split("@");
+
+    return localPart || "there";
+  }, [authUser]);
+
   const profileAddress = useMemo(() => {
     if (!authUser) {
       return "";
@@ -72,25 +95,29 @@ export default function PatientDashboardPage() {
     <AuthSessionGuard>
       <PatientShell activeItem="dashboard" pageSubtitle="Patient Dashboard">
         <section className="mx-auto max-w-6xl space-y-8 px-1 py-2">
-          <section className="rounded-3xl bg-white/90 p-8 shadow-soft">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="space-y-2">
-                <p className="text-xs font-black uppercase tracking-widest text-primary">Patient Dashboard</p>
-                <h1 className="font-display text-4xl font-extrabold tracking-tight text-zinc-900">
-                  Curated Care Sanctuary
+          <section className="rounded-[2.5rem] bg-linear-to-br from-[#0f6f9a] to-[#0a5f88] p-8 shadow-soft sm:p-10">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight text-[#b8dcf3] sm:text-5xl">
+                  Welcome back,
+                  <br />
+                  {welcomeName}
                 </h1>
-                <p className="max-w-2xl text-sm leading-relaxed text-secondary">
-                  Manage care requests, monitor active visits, and review completed services
-                  with a calm, editorial-first workspace.
+                <p className="max-w-2xl text-lg leading-relaxed text-[#9cc9e7] sm:text-xl">
+                  Your health is our priority. You have 2 caregivers
+                  available in your area today.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsRequestModalOpen(true)}
-                className="inline-flex h-12 items-center rounded-full bg-linear-to-r from-[#0f6d95] to-[#1799b5] px-6 text-sm font-bold text-white shadow-lg transition hover:from-[#0d5f83] hover:to-[#14859d]"
+                className="inline-flex h-14 items-center gap-3 rounded-full bg-white px-7 text-base font-bold text-[#0a4c76] shadow-lg transition hover:bg-[#f3f8fc]"
               >
-                ➕ Request Care
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0a4c76] text-sm text-white">
+                  +
+                </span>
+                Request Caregiver
               </button>
             </div>
           </section>
