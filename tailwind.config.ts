@@ -7,6 +7,7 @@ const config: Config = {
         primary: "#005C97",
         secondary: "#53626F",
         tertiary: "#2E7D32",
+        warning: "#B7791F",
         neutral: "#F5F7FA",
       },
       fontFamily: {
