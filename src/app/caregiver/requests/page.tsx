@@ -46,10 +46,12 @@ function AssignmentTimelineCard({
 	assignment,
 	onStart,
 	onComplete,
+	onViewDetails,
 }: {
 	assignment: Assignment;
 	onStart?: (assignmentId: string) => void;
 	onComplete?: (assignmentId: string) => void;
+	onViewDetails?: (assignmentId: string) => void;
 }) {
 	return (
 		<article className="rounded-3xl border border-[#d8e4ee] bg-white p-5 shadow-soft sm:p-6">
@@ -81,6 +83,16 @@ function AssignmentTimelineCard({
 			{assignment.note ? <p className="mt-4 text-sm text-secondary">{assignment.note}</p> : null}
 
 			<div className="mt-5 flex flex-wrap gap-3">
+				{onViewDetails ? (
+					<button
+						type="button"
+						onClick={() => onViewDetails(assignment.id)}
+						className="inline-flex h-10 items-center rounded-full border border-primary/20 bg-[#edf4fa] px-5 text-sm font-semibold text-primary transition hover:bg-[#dbeaf7]"
+					>
+						View Details
+					</button>
+				) : null}
+
 				{assignment.status === "ACCEPTED" && onStart ? (
 					<button
 						type="button"
@@ -186,6 +198,27 @@ export default function CaregiverRequestsPage() {
 			null
 		);
 	}, [activeAssignments, historyAssignments, pendingAssignments, selectedAssignmentId]);
+
+	useEffect(() => {
+		if (!selectedAssignment) {
+			return;
+		}
+
+		function handleEscape(event: KeyboardEvent) {
+			if (event.key === "Escape") {
+				setSelectedAssignmentId(null);
+			}
+		}
+
+		window.addEventListener("keydown", handleEscape);
+		const previousOverflow = document.body.style.overflow;
+		document.body.style.overflow = "hidden";
+
+		return () => {
+			window.removeEventListener("keydown", handleEscape);
+			document.body.style.overflow = previousOverflow;
+		};
+	}, [selectedAssignment]);
 
 	if (!isAuthenticated || !isCaregiverRole(userRole)) {
 		return (
@@ -324,6 +357,9 @@ export default function CaregiverRequestsPage() {
 									<AssignmentTimelineCard
 										key={assignment.id}
 										assignment={assignment}
+										onViewDetails={(assignmentId) => {
+											setSelectedAssignmentId(assignmentId);
+										}}
 										onStart={(assignmentId) => {
 											void startAssignment(assignmentId);
 										}}
@@ -336,8 +372,14 @@ export default function CaregiverRequestsPage() {
 				)}
 
 				{selectedAssignment ? (
-					<div className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-900/45 p-4">
-						<div className="w-full max-w-xl rounded-3xl border border-[#cde1ef] bg-white p-6 shadow-2xl">
+					<div
+						className="fixed inset-0 z-40 flex items-center justify-center bg-zinc-900/45 p-4"
+						onClick={() => setSelectedAssignmentId(null)}
+					>
+						<div
+							className="w-full max-w-xl rounded-3xl border border-[#cde1ef] bg-white p-6 shadow-2xl"
+							onClick={(event) => event.stopPropagation()}
+						>
 							<div className="flex items-start justify-between gap-3">
 								<div>
 									<p className="text-xs font-black uppercase tracking-widest text-primary">
