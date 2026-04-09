@@ -60,7 +60,7 @@ function LoginContent() {
       return ROUTES.admin;
     }
 
-    return ROUTES.dashboard;
+    return ROUTES.patient;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

@@ -5,7 +5,6 @@ import {
   CalendarDays,
   Check,
   ChevronRight,
-  CircleHelp,
   ClipboardList,
   Clock3,
   History,
@@ -14,12 +13,14 @@ import {
   Plus,
   Pill,
   Search,
-  Settings,
   User,
 } from "lucide-react";
 import type { ComponentType } from "react";
 
 import { AuthSessionGuard } from "@/components/auth/AuthSessionGuard";
+import { SignOutButton } from "@/components/auth/SignOutButton";
+import { BrandLogo } from "@/components/branding/BrandLogo";
+import { ROUTES } from "@/lib/routes";
 
 type SidebarLink = {
   label: string;
@@ -45,12 +46,6 @@ const primaryLinks: SidebarLink[] = [
   { label: "Requests", icon: ClipboardList },
   { label: "Schedule", icon: CalendarDays },
   { label: "Profile", icon: User },
-  { label: "Medication", icon: Pill },
-];
-
-const footerLinks: SidebarLink[] = [
-  { label: "Settings", icon: Settings },
-  { label: "Help", icon: CircleHelp },
 ];
 
 const activeRequests: ActiveRequest[] = [
@@ -112,20 +107,13 @@ export default function PatientDashboardPage() {
     <AuthSessionGuard>
       <main className="h-screen overflow-hidden bg-neutral">
         <div className="flex h-full w-full flex-col lg:flex-row">
-          <aside className="flex w-full shrink-0 flex-col border-b border-zinc-200/80 bg-white px-4 py-4 sm:px-5 lg:h-full lg:w-59 lg:border-b-0 lg:border-r lg:py-6">
-            <div className="space-y-1">
-              <p className="font-display text-2xl font-extrabold tracking-tight text-primary">
-                GrandCure
-              </p>
-              <p className="text-xs font-medium text-secondary">
-                Patient Portal
-              </p>
+          <aside className="flex w-full shrink-0 flex-col border-b border-zinc-200/80 bg-white/95 px-4 py-4 shadow-sm backdrop-blur-lg sm:px-5 lg:h-full lg:w-72 lg:rounded-r-3xl lg:border-b-0 lg:border-r lg:py-6 lg:shadow-xl lg:shadow-[#8cb6cf]/25">
+            <div className="space-y-2">
+              <BrandLogo href={ROUTES.patient} className="inline-block text-3xl" ariaLabel="Patient dashboard" />
+              <p className="text-sm font-medium text-secondary">Patient Portal</p>
             </div>
 
-            <nav
-              className="mt-5 flex gap-1.5 overflow-x-auto pb-1 lg:mt-8 lg:block lg:space-y-1.5 lg:overflow-visible lg:pb-0"
-              aria-label="Primary sidebar navigation"
-            >
+            <nav className="mt-6 space-y-1.5" aria-label="Primary sidebar navigation">
               {primaryLinks.map((item) => {
                 const Icon = item.icon;
 
@@ -134,39 +122,23 @@ export default function PatientDashboardPage() {
                     key={item.label}
                     type="button"
                     className={[
-                      "flex h-11 shrink-0 items-center gap-2 rounded-2xl px-3 text-left text-xs font-semibold transition sm:text-sm lg:w-full lg:gap-3",
+                      "group flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-semibold transition",
                       item.isActive
-                        ? "bg-[#edf4fa] text-primary"
-                        : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
+                        ? "bg-linear-to-r from-[#e7f4ff] to-[#f2f9ff] text-[#0d567a] shadow-sm ring-1 ring-[#b8def3]"
+                        : "text-zinc-700 hover:bg-[#eef6ff] hover:text-[#0b5476]",
                     ].join(" ")}
                     aria-current={item.isActive ? "page" : undefined}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4 transition group-hover:scale-105" />
                     <span>{item.label}</span>
                   </button>
                 );
               })}
             </nav>
 
-            <nav
-              className="mt-4 flex gap-1.5 overflow-x-auto pb-1 lg:mt-auto lg:block lg:space-y-1.5 lg:overflow-visible lg:pb-0"
-              aria-label="Sidebar secondary navigation"
-            >
-              {footerLinks.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <button
-                    key={item.label}
-                    type="button"
-                    className="flex h-11 shrink-0 items-center gap-2 rounded-2xl px-3 text-left text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900 sm:text-sm lg:w-full lg:gap-3"
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
+            <div className="mt-auto border-t border-zinc-200/70 pt-4">
+              <SignOutButton />
+            </div>
           </aside>
 
           <section className="min-h-0 min-w-0 flex-1 overflow-hidden p-2 sm:p-4 lg:p-6">

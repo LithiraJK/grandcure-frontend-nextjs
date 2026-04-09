@@ -23,7 +23,7 @@ function resolveRoleHome(role: SessionRole | null) {
     return "/admin";
   }
 
-  return "/dashboard";
+  return "/patient";
 }
 
 function getRequestedRole(pathname: string): SessionRole | null {
