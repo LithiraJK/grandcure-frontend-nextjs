@@ -46,6 +46,7 @@ type AssignmentState = {
   fetchCaregiverHistory: () => Promise<void>;
   fetchPatientAssignments: () => Promise<void>;
   createRequest: (payload: CreateAssignmentRequestPayload) => Promise<void>;
+  deleteRequest: (assignmentId: string) => Promise<void>;
   cancelAssignment: (assignmentId: string) => Promise<void>;
   acceptAssignment: (assignmentId: string) => Promise<void>;
   startAssignment: (assignmentId: string) => Promise<void>;
@@ -367,24 +368,29 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
     }
   },
 
-  cancelAssignment: async (assignmentId) => {
+  deleteRequest: async (assignmentId) => {
     set({ isLoading: true });
 
     try {
-      await axios.patch(
-        `${BACKEND_BASE_URL}/assignments/${assignmentId}/cancel`,
-        {},
+      await axios.delete(
+        `${BACKEND_BASE_URL}/assignments/${assignmentId}/request`,
         { headers: getAuthHeaders() },
       );
 
-      emitToast("Assignment cancelled successfully.", "success");
+      emitToast("Care request deleted successfully.", "success");
       await get().fetchPatientAssignments();
     } catch (error) {
-      emitToast("Failed to cancel assignment.", "error");
+      const message = extractRequestError(error);
+      emitToast(message, "error");
       console.error(error);
+      throw new Error(message);
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  cancelAssignment: async (assignmentId) => {
+    await get().deleteRequest(assignmentId);
   },
 
   acceptAssignment: async (assignmentId) => {

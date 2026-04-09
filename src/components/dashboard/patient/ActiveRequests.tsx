@@ -45,7 +45,7 @@ export function ActiveRequests() {
   const isLoading = useAssignmentStore((state) => state.isLoading);
   const patientAssignments = useAssignmentStore((state) => state.patientAssignments);
   const fetchPatientAssignments = useAssignmentStore((state) => state.fetchPatientAssignments);
-  const cancelAssignment = useAssignmentStore((state) => state.cancelAssignment);
+  const deleteRequest = useAssignmentStore((state) => state.deleteRequest);
 
   useEffect(() => {
     void fetchPatientAssignments();
@@ -120,11 +120,11 @@ export function ActiveRequests() {
                     <button
                       type="button"
                       onClick={() => {
-                        void cancelAssignment(assignment.id);
+                        void deleteRequest(assignment.id);
                       }}
                       className="inline-flex h-10 items-center rounded-full bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
                     >
-                      Cancel Request
+                      Delete Request
                     </button>
                   </div>
                 ) : null}
