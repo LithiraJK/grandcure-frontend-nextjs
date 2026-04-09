@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { apiRequest } from "@/lib/apiClient";
 import {
   type LoginPayload,
   login as loginRequest,
@@ -35,15 +36,38 @@ type AuthState = {
   isAuthenticated: boolean;
   isLoginLoading: boolean;
   isRegisterLoading: boolean;
+  isAvailabilityLoading: boolean;
   loginError: string | null;
   registerError: string | null;
   login: (payload: LoginPayload) => Promise<JwtUserPayload>;
   register: (payload: RegisterPayload) => Promise<void>;
-  toggleAvailability: () => void;
+  toggleAvailability: () => Promise<void>;
   logout: () => void;
 };
 
+type AvailabilityResponseData = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  isBlocked: boolean;
+  isAvailable: boolean;
+};
+
 const AUTH_TOKEN_STORAGE_KEY = "gc_access_token";
+
+function emitToast(message: string, tone: "success" | "error") {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("gc:toast", {
+        detail: {
+          message,
+          tone,
+        },
+      }),
+    );
+  }
+}
 
 function getStoredToken() {
   if (typeof window === "undefined") {
@@ -133,12 +157,13 @@ function getInitialAuthState() {
 
 const initial = getInitialAuthState();
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: initial.user,
   token: initial.token,
   isAuthenticated: initial.isAuthenticated,
   isLoginLoading: false,
   isRegisterLoading: false,
+  isAvailabilityLoading: false,
   loginError: null,
   registerError: null,
 
@@ -196,19 +221,75 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  toggleAvailability: () => {
-    set((state) => {
-      if (!state.user) {
-        return state;
-      }
+  toggleAvailability: async () => {
+    const currentUser = get().user;
 
-      return {
-        user: {
-          ...state.user,
-          isAvailable: !state.user.isAvailable,
-        },
-      };
+    if (!currentUser) {
+      return;
+    }
+
+    const previousAvailability = currentUser.isAvailable ?? true;
+    const nextAvailability = !previousAvailability;
+
+    set({
+      isAvailabilityLoading: true,
+      user: {
+        ...currentUser,
+        isAvailable: nextAvailability,
+      },
     });
+
+    try {
+      const response = await apiRequest<AvailabilityResponseData>("/users/availability", {
+        method: "PATCH",
+        body: {
+          isAvailable: nextAvailability,
+        },
+      });
+
+      const persistedAvailability =
+        typeof response.data?.isAvailable === "boolean"
+          ? response.data.isAvailable
+          : nextAvailability;
+
+      set((state) => {
+        if (!state.user) {
+          return { isAvailabilityLoading: false };
+        }
+
+        return {
+          isAvailabilityLoading: false,
+          user: {
+            ...state.user,
+            isAvailable: persistedAvailability,
+          },
+        };
+      });
+
+      emitToast(
+        persistedAvailability
+          ? "Availability updated: now accepting offers."
+          : "Availability updated: currently unavailable.",
+        "success",
+      );
+    } catch (error) {
+      set((state) => {
+        if (!state.user) {
+          return { isAvailabilityLoading: false };
+        }
+
+        return {
+          isAvailabilityLoading: false,
+          user: {
+            ...state.user,
+            isAvailable: previousAvailability,
+          },
+        };
+      });
+
+      const message = error instanceof Error ? error.message : "Failed to update availability.";
+      emitToast(message, "error");
+    }
   },
 
   logout: () => {
@@ -219,6 +300,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: false,
       isLoginLoading: false,
       isRegisterLoading: false,
+      isAvailabilityLoading: false,
       loginError: null,
       registerError: null,
     });

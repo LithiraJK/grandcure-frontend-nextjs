@@ -2,7 +2,6 @@
 
 import {
   Bell,
-  CircleHelp,
   ClipboardList,
   LayoutDashboard,
   Search,
@@ -35,7 +34,6 @@ const primaryNavItems: NavItem[] = [
   { key: "requests", label: "Requests", href: ROUTES.caregiverRequests, icon: ClipboardList },
   { key: "schedule", label: "Schedule", href: ROUTES.caregiverSchedule, icon: ClipboardList },
   { key: "profile", label: "Profile", href: ROUTES.caregiverProfile, icon: User },
-  { key: "escalation", label: "Admin Escalation", icon: CircleHelp },
 ];
 
 export function CaregiverShell({ children, activeItem, pageSubtitle }: CaregiverShellProps) {

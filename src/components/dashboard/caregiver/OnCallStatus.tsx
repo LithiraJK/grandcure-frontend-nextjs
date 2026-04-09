@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 export function OnCallStatus() {
   const isAvailable = useAuthStore((state) => state.user?.isAvailable ?? true);
+  const isAvailabilityLoading = useAuthStore((state) => state.isAvailabilityLoading);
   const toggleAvailability = useAuthStore((state) => state.toggleAvailability);
 
   return (
@@ -24,8 +25,12 @@ export function OnCallStatus() {
             type="button"
             role="switch"
             aria-checked={isAvailable}
-            onClick={toggleAvailability}
-            className="group inline-flex h-11 w-20 items-center rounded-full bg-zinc-200 p-1 transition data-[state=on]:bg-primary"
+            aria-busy={isAvailabilityLoading}
+            disabled={isAvailabilityLoading}
+            onClick={() => {
+              void toggleAvailability();
+            }}
+            className="group inline-flex h-11 w-20 items-center rounded-full bg-zinc-200 p-1 transition data-[state=on]:bg-primary disabled:cursor-not-allowed disabled:opacity-70"
             data-state={isAvailable ? "on" : "off"}
           >
             <span
@@ -40,7 +45,11 @@ export function OnCallStatus() {
               isAvailable ? "text-tertiary" : "text-zinc-500",
             ].join(" ")}
           >
-            {isAvailable ? "Currently Accepting Offers" : "Currently Unavailable"}
+            {isAvailabilityLoading
+              ? "Updating Availability..."
+              : isAvailable
+                ? "Currently Accepting Offers"
+                : "Currently Unavailable"}
           </p>
         </div>
       </div>
