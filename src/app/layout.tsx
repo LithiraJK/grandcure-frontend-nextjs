@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
+
+import { GlobalToastHost } from "@/components/ui/Toast/GlobalToastHost";
 import "./globals.css";
 
 const inter = Inter({
@@ -26,6 +28,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${manrope.variable} h-full antialiased`}>
       <body className={`${inter.className} min-h-full flex flex-col bg-neutral text-secondary`}>
         {children}
+        <GlobalToastHost />
       </body>
     </html>
   );
