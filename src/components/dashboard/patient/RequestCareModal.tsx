@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   type CreateAssignmentRequestPayload,
@@ -12,6 +12,8 @@ type Coordinates = {
   latitude: number;
   longitude: number;
 };
+
+type LocationMode = "profile" | "custom";
 
 type RequestCareModalProps = {
   isOpen: boolean;
@@ -31,6 +33,7 @@ export function RequestCareModal({
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [locationMode, setLocationMode] = useState<LocationMode>("profile");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,6 +53,21 @@ export function RequestCareModal({
     return `${year}-${month}-${day}`;
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    if (resolvedProfileAddress) {
+      setLocationMode("profile");
+      setLocation(resolvedProfileAddress);
+      return;
+    }
+
+    setLocationMode("custom");
+    setLocation("");
+  }, [isOpen, resolvedProfileAddress]);
+
   if (!isOpen) {
     return null;
   }
@@ -59,6 +77,7 @@ export function RequestCareModal({
     setDate("");
     setStartTime("");
     setEndTime("");
+    setLocationMode(resolvedProfileAddress ? "profile" : "custom");
     setLocation(resolvedProfileAddress);
     setNotes("");
     setFormError(null);
@@ -92,9 +111,15 @@ export function RequestCareModal({
       return;
     }
 
-    const trimmedLocation = location.trim();
-    if (!trimmedLocation) {
-      setFormError("Please enter a location.");
+    const selectedLocation =
+      locationMode === "profile" ? resolvedProfileAddress : location.trim();
+
+    if (!selectedLocation) {
+      setFormError(
+        locationMode === "profile"
+          ? "Profile location not found. Please choose custom location."
+          : "Please enter a location.",
+      );
       return;
     }
 
@@ -112,7 +137,7 @@ export function RequestCareModal({
         date,
         startTime,
         endTime,
-        location: trimmedLocation,
+        location: selectedLocation,
         notes: trimmedNotes,
       });
 
@@ -218,14 +243,48 @@ export function RequestCareModal({
               <label htmlFor="request-location" className="text-sm font-semibold text-zinc-800">
                 Location
               </label>
-              <input
-                id="request-location"
-                type="text"
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                placeholder={resolvedProfileAddress || "Enter location (e.g. Colombo 05)"}
-                className="h-11 w-full rounded-2xl bg-[#f3f8fc] px-4 text-sm text-zinc-900 outline-none transition placeholder:text-secondary focus:bg-white"
-              />
+
+              <div className="inline-flex flex-wrap gap-2 rounded-2xl bg-[#edf4fa] p-1.5">
+                <button
+                  type="button"
+                  onClick={() => setLocationMode("profile")}
+                  className={[
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition",
+                    locationMode === "profile"
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-secondary hover:text-zinc-900",
+                  ].join(" ")}
+                >
+                  Use Profile Location
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLocationMode("custom")}
+                  className={[
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition",
+                    locationMode === "custom"
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-secondary hover:text-zinc-900",
+                  ].join(" ")}
+                >
+                  Add Different Location
+                </button>
+              </div>
+
+              {locationMode === "profile" ? (
+                <div className="min-h-11 w-full rounded-2xl bg-[#f3f8fc] px-4 py-3 text-sm text-zinc-900">
+                  {resolvedProfileAddress || "No profile location found"}
+                </div>
+              ) : (
+                <input
+                  id="request-location"
+                  type="text"
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
+                  placeholder={resolvedProfileAddress || "Enter location (e.g. Colombo 05)"}
+                  className="h-11 w-full rounded-2xl bg-[#f3f8fc] px-4 text-sm text-zinc-900 outline-none transition placeholder:text-secondary focus:bg-white"
+                />
+              )}
             </div>
           </div>
 
