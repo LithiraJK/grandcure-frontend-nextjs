@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import { CaregiverShell } from "@/components/dashboard/caregiver/CaregiverShell";
 import { EarningsWidget } from "@/components/dashboard/caregiver/EarningsWidget";
@@ -29,9 +29,9 @@ export default function CaregiverDashboardPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const userRole = useAuthStore((state) => state.user?.role);
 
-  const assignments = useAssignmentStore((state) => state.assignments);
+  const pendingAssignments = useAssignmentStore((state) => state.pendingAssignments);
   const isLoadingAssignments = useAssignmentStore((state) => state.isLoading);
-  const fetchPendingRequests = useAssignmentStore((state) => state.fetchPendingRequests);
+  const fetchPending = useAssignmentStore((state) => state.fetchPending);
 
   useEffect(() => {
     if (!isAuthenticated || !isCaregiverRole(userRole)) {
@@ -40,13 +40,8 @@ export default function CaregiverDashboardPage() {
   }, [isAuthenticated, router, userRole]);
 
   useEffect(() => {
-    void fetchPendingRequests();
-  }, [fetchPendingRequests]);
-
-  const pendingAssignments = useMemo(
-    () => assignments.filter((assignment) => assignment.status === "PENDING"),
-    [assignments],
-  );
+    void fetchPending();
+  }, [fetchPending]);
 
   if (!isAuthenticated || !isCaregiverRole(userRole)) {
     return (
@@ -70,7 +65,11 @@ export default function CaregiverDashboardPage() {
                 Offers Panel
               </h2>
 
-              <button type="button" className="text-sm font-bold text-primary hover:text-blue-700">
+              <button
+                type="button"
+                onClick={() => router.push(ROUTES.caregiverRequests)}
+                className="text-sm font-bold text-primary hover:text-blue-700"
+              >
                 View History
               </button>
             </div>
