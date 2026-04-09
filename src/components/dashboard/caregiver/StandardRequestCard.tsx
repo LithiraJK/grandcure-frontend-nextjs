@@ -21,7 +21,7 @@ export function StandardRequestCard({ assignment, onViewDetails }: StandardReque
       <div className="flex items-start justify-between gap-3">
         <span
           className={[
-            "inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em]",
+            "inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest",
             assignment.priority === "RECURRING"
               ? "bg-tertiary/10 text-tertiary"
               : "bg-cyan-100 text-[#0f5b73]",

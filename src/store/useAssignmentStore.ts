@@ -26,14 +26,12 @@ export type Assignment = {
 };
 
 type AssignmentState = {
-  assignments: Assignment[];
   pendingAssignments: Assignment[];
   activeAssignments: Assignment[];
   historyAssignments: Assignment[];
   isLoading: boolean;
   fetchPending: () => Promise<void>;
   fetchCaregiverHistory: () => Promise<void>;
-  fetchPendingRequests: () => Promise<void>;
   acceptAssignment: (assignmentId: string) => Promise<void>;
   startAssignment: (assignmentId: string) => Promise<void>;
   completeAssignment: (assignmentId: string) => Promise<void>;
@@ -211,7 +209,6 @@ function deriveActiveAssignments(
 }
 
 export const useAssignmentStore = create<AssignmentState>((set, get) => ({
-  assignments: [],
   pendingAssignments: [],
   activeAssignments: [],
   historyAssignments: [],
@@ -229,7 +226,6 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
       const historyAssignments = get().historyAssignments;
 
       set({
-        assignments: pendingAssignments,
         pendingAssignments,
         activeAssignments: deriveActiveAssignments(pendingAssignments, historyAssignments),
       });
@@ -265,10 +261,6 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
-  },
-
-  fetchPendingRequests: async () => {
-    await get().fetchPending();
   },
 
   acceptAssignment: async (assignmentId) => {
@@ -338,7 +330,6 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
       );
 
       return {
-        assignments: pendingAssignments,
         pendingAssignments,
         activeAssignments: deriveActiveAssignments(
           pendingAssignments,
