@@ -1,0 +1,219 @@
+"use client";
+
+import { Lock, Mail } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState, type FormEvent } from "react";
+
+import { AuthInputField } from "@/components/auth/AuthInputField";
+import { AuthFormMessage } from "@/components/auth/AuthFormMessage";
+import { AuthPrimaryButton } from "@/components/auth/AuthPrimaryButton";
+import { PasswordToggleButton } from "@/components/auth/PasswordToggleButton";
+import { mapJwtRoleToSessionRole, resolveJwtRole } from "@/lib/authRoles";
+import { establishAuthSession } from "@/lib/authSession";
+import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
+import { validateLogin, type LoginFormValues } from "@/lib/authValidation";
+import { ROUTES } from "@/lib/routes";
+import { useAuthStore } from "@/store/useAuthStore";
+
+function LoginContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [formValues, setFormValues] = useState<LoginFormValues>({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof LoginFormValues, string>>>({});
+  const [rememberDevice, setRememberDevice] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [dismissedSearchMessageKey, setDismissedSearchMessageKey] = useState<string | null>(null);
+  const passwordVisibility = usePasswordVisibility();
+  const login = useAuthStore((state) => state.login);
+  const isLoading = useAuthStore((state) => state.isLoginLoading);
+  const searchMessageKey = searchParams.toString();
+  const searchMessage = useMemo(() => {
+    if (searchParams.get("registered") === "1") {
+      return "Registration successful. Please sign in with your new account.";
+    }
+
+    if (searchParams.get("expired") === "1") {
+      return "Your session expired. Please sign in again.";
+    }
+
+    if (searchParams.get("session") === "missing") {
+      return "Please sign in to continue.";
+    }
+
+    return null;
+  }, [searchParams]);
+  const resolvedSearchMessage = dismissedSearchMessageKey === searchMessageKey ? null : searchMessage;
+  const activeMessage = formMessage ?? resolvedSearchMessage;
+
+  const resolveDestinationByRole = (role: string | undefined) => {
+    const sessionRole = mapJwtRoleToSessionRole(role);
+
+    if (sessionRole === "caregiver") {
+      return ROUTES.caregiver;
+    }
+
+    if (sessionRole === "member") {
+      return ROUTES.admin;
+    }
+
+    return ROUTES.patient;
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextErrors = validateLogin(formValues);
+    setErrors(nextErrors);
+    setDismissedSearchMessageKey(searchMessageKey);
+    setFormMessage(null);
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFormMessage("Please fix the highlighted fields and try again.");
+      return;
+    }
+
+    try {
+      const authenticatedUser = await login(formValues);
+      const resolvedRole = resolveJwtRole(authenticatedUser as Record<string, unknown>);
+
+      await establishAuthSession(
+        mapJwtRoleToSessionRole(resolvedRole),
+        rememberDevice,
+      );
+      setFormMessage("Signed in successfully. Redirecting to your dashboard...");
+      router.push(resolveDestinationByRole(resolvedRole));
+      return;
+    } catch (error) {
+      setFormMessage(
+        error instanceof Error ? error.message : "Could not sign in. Please try again.",
+      );
+    }
+  };
+
+  const updateField = <K extends keyof LoginFormValues>(field: K, value: LoginFormValues[K]) => {
+    setFormValues((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+    setDismissedSearchMessageKey(searchMessageKey);
+    setFormMessage(null);
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-xl rounded-[2.25rem] border border-[#e3e8ef] bg-[#f8fafc]/96 p-6 shadow-[0_32px_70px_-46px_rgba(20,38,54,0.62)] sm:p-8 md:p-9">
+      <div className="space-y-2">
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
+          Welcome back
+        </h1>
+        <p className="text-sm leading-relaxed text-secondary">
+          Enter your credentials to access the management portal.
+        </p>
+      </div>
+
+      <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+        <AuthInputField
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          label="Work Email"
+          placeholder="name@grandcure.com"
+          value={formValues.email}
+          onChange={(event) => updateField("email", event.target.value)}
+          error={errors.email}
+          leftIcon={<Mail aria-hidden="true" className="h-4 w-4 text-secondary" strokeWidth={2} />}
+        />
+
+        <AuthInputField
+          id="password"
+          name="password"
+          type={passwordVisibility.inputType}
+          autoComplete="current-password"
+          label="Password"
+          placeholder="••••••••"
+          value={formValues.password}
+          onChange={(event) => updateField("password", event.target.value)}
+          error={errors.password}
+          labelRightSlot={
+            <Link
+              href="#"
+              className="text-xs font-semibold text-primary transition hover:text-blue-700"
+            >
+              Forgot password?
+            </Link>
+          }
+          leftIcon={<Lock aria-hidden="true" className="h-4 w-4 text-secondary" strokeWidth={2} />}
+          rightSlot={
+            <PasswordToggleButton
+              isVisible={passwordVisibility.isVisible}
+              ariaLabel={passwordVisibility.ariaLabel}
+              onToggle={passwordVisibility.toggleVisibility}
+            />
+          }
+        />
+
+        <label className="inline-flex items-center gap-2 pt-1 text-sm text-secondary">
+          <input
+            type="checkbox"
+            checked={rememberDevice}
+            onChange={(event) => setRememberDevice(event.target.checked)}
+            className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary"
+          />
+          Remember this device
+        </label>
+
+        {activeMessage ? (
+          <AuthFormMessage
+            message={activeMessage}
+            tone={Object.keys(errors).length > 0 ? "error" : "success"}
+          />
+        ) : null}
+
+        <AuthPrimaryButton type="submit" disabled={isLoading} aria-busy={isLoading}>
+          {isLoading ? "Signing In..." : "Sign In to Portal"}
+          <span aria-hidden="true">→</span>
+        </AuthPrimaryButton>
+      </form>
+
+      <div className="mt-8">
+        <div className="relative py-2">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <span className="h-px w-full bg-zinc-200" />
+          </div>
+          <p className="relative mx-auto w-fit bg-white px-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-zinc-400">
+            Or continue with
+          </p>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3">
+          <button
+            type="button"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-100 px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-200"
+          >
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-zinc-900 text-[10px] font-bold text-white">
+              G
+            </span>
+            Google SSO
+          </button>
+        </div>
+
+        <p className="mt-5 text-center text-sm text-secondary">
+          Don&apos;t have an account?{" "}
+          <Link href={ROUTES.register} className="font-bold text-primary hover:text-blue-700">
+            Sign Up
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto h-130 w-full max-w-md animate-pulse rounded-3xl bg-zinc-100" />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
